@@ -1,0 +1,20 @@
+{
+  "name": "FastNote — Quick Device Clipboard",
+  "short_name": "FastNote",
+  "description": "Instantly pass notes, links, images, and PDFs across your phone, tablet, and computer.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF9F7",
+  "theme_color": "#FAF9F7",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

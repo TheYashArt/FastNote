@@ -15,7 +15,8 @@ import {
   Tablet, 
   Maximize2,
   Pencil,
-  HardDrive
+  HardDrive,
+  FileCode
 } from 'lucide-react';
 import type { Note } from '../types';
 import { extractDomain, formatBytes, timeAgo, NOTE_COLOR_MAP } from '../lib/utils';
@@ -62,12 +63,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     ? [{ url: note.file_url, name: note.file_name || 'document.pdf', size: note.file_size }]
     : [];
 
+  const mdsList = note.attachments?.md_files && note.attachments.md_files.length > 0
+    ? note.attachments.md_files
+    : note.attachments?.md_file
+    ? [note.attachments.md_file]
+    : [];
+
   // Determine whether to display the text body
   const showTextBody = Boolean(
     note.content &&
     note.content !== linkAttachment &&
     !imagesList.some((img) => img.name === note.content) &&
     !pdfsList.some((pdf) => pdf.name === note.content) &&
+    !mdsList.some((md) => md.name === note.content) &&
     note.content !== 'Note'
   );
 
@@ -83,6 +91,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       }
       if (pdfsList.length > 0) {
         parts.push(`PDFs (${pdfsList.length}):\n${pdfsList.map((p) => p.url).join('\n')}`);
+      }
+      if (mdsList.length > 0) {
+        parts.push(`Markdown Files (${mdsList.length}):\n${mdsList.map((m) => m.url).join('\n')}`);
       }
 
       const fullText = parts.join('\n\n') || note.content;
@@ -168,6 +179,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <FileCheck className="w-3 h-3" />
                 {pdfsList.length > 1 && (
                   <span className="text-[10px] font-mono font-semibold">{pdfsList.length}</span>
+                )}
+              </span>
+            )}
+
+            {mdsList.length > 0 && (
+              <span 
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200/50"
+                title={`${mdsList.length} .md file(s)`}
+              >
+                <FileCode className="w-3 h-3" />
+                {mdsList.length > 1 && (
+                  <span className="text-[10px] font-mono font-semibold">{mdsList.length}</span>
                 )}
               </span>
             )}
@@ -390,6 +413,48 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                     download={pdf.name}
                     className="p-1 rounded text-[#4D473E] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
                     title="Download PDF"
+                  >
+                    <Download className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Multiple Attached MDs List */}
+        {mdsList.length > 0 && (
+          <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+            {mdsList.map((md, idx) => (
+              <div 
+                key={`${md.name}_${idx}`}
+                className="p-2 rounded-lg bg-white/80 border border-[#DDD7CD]/80 flex items-center justify-between gap-2 shadow-2xs"
+              >
+                <div className="flex items-center gap-2 overflow-hidden flex-1">
+                  <div className="w-6 h-6 rounded bg-[#F4F5F7] border border-[#E2E5EB] flex items-center justify-center text-indigo-700 shrink-0">
+                    <FileCode className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="truncate flex-1">
+                    <p className="text-[11px] font-semibold text-[#1A1815] truncate font-mono">{md.name}</p>
+                    <p className="text-[9px] font-mono text-[#8C8476]">{formatBytes(md.size)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <a
+                    href={md.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded text-[#4D473E] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                    title="Open / View Markdown"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <a
+                    href={md.url}
+                    download={md.name}
+                    className="p-1 rounded text-[#4D473E] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                    title="Download Markdown"
                   >
                     <Download className="w-3 h-3" />
                   </a>

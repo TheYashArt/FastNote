@@ -15,11 +15,12 @@ if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
   }
 }
 
-// Normalize a note and extract structured attachments (supporting multiple images and multiple PDFs)
+// Normalize a note and extract structured attachments (supporting multiple images, multiple PDFs, and Markdown files)
 export function normalizeNote(raw: Note): Note {
   let attachments: NoteAttachments = {
     images: [],
     pdfs: [],
+    md_files: [],
   };
 
   if (raw.file_url) {
@@ -38,9 +39,16 @@ export function normalizeNote(raw: Note): Note {
             : parsed.pdf
             ? [parsed.pdf]
             : [],
+          md_files: Array.isArray(parsed.md_files)
+            ? parsed.md_files
+            : Array.isArray(parsed.mds)
+            ? parsed.mds
+            : parsed.md_file
+            ? [parsed.md_file]
+            : [],
         };
       } catch {
-        attachments = { images: [], pdfs: [] };
+        attachments = { images: [], pdfs: [], md_files: [] };
       }
     } else {
       // Legacy single file_url
@@ -67,10 +75,12 @@ export function normalizeNote(raw: Note): Note {
 
   if (!attachments.images) attachments.images = [];
   if (!attachments.pdfs) attachments.pdfs = [];
+  if (!attachments.md_files) attachments.md_files = [];
 
   // Maintain backward compatibility for single-item readers
   attachments.image = attachments.images[0];
   attachments.pdf = attachments.pdfs[0];
+  attachments.md_file = attachments.md_files[0];
 
   return {
     ...raw,
@@ -240,6 +250,7 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
   let link = payload.link_url?.trim() || undefined;
   const imageAttachments: NoteAttachmentFile[] = [...(payload.image_attachments || [])];
   const pdfAttachments: NoteAttachmentFile[] = [...(payload.pdf_attachments || [])];
+  const mdAttachments: NoteAttachmentFile[] = [...(payload.md_attachments || [])];
 
   // Upload multiple images if provided (enforcing MAX_IMAGES_PER_NOTE)
   const remainingImageSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE - imageAttachments.length);
@@ -279,11 +290,24 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
     });
   }
 
+  // Upload multiple Markdown files if provided (enforcing MAX_MDS_PER_NOTE)
+  const remainingMdSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE - mdAttachments.length);
+  if (payload.md_files && payload.md_files.length > 0) {
+    const filesToUpload = payload.md_files.slice(0, remainingMdSlots);
+    for (const f of filesToUpload) {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, f, 'md');
+      mdAttachments.push(uploaded);
+    }
+  }
+
   // Legacy fallback
-  if (payload.file && imageAttachments.length === 0 && pdfAttachments.length === 0) {
+  if (payload.file && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0) {
     if (payload.file.type.startsWith('image/')) {
       const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'img');
       imageAttachments.push(uploaded);
+    } else if (payload.file.name.endsWith('.md') || payload.file.type === 'text/markdown') {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'md');
+      mdAttachments.push(uploaded);
     } else {
       const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'doc');
       pdfAttachments.push(uploaded);
@@ -294,29 +318,31 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
     link,
     images: imageAttachments,
     pdfs: pdfAttachments,
+    md_files: mdAttachments,
     image: imageAttachments[0],
     pdf: pdfAttachments[0],
+    md_file: mdAttachments[0],
   };
 
-  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0);
+  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0);
 
   // Primary type for DB check constraint (must be 'text' | 'link' | 'image' | 'pdf')
   let primaryType: NoteType = 'text';
   if (payload.type) {
     primaryType = payload.type;
-  } else if (link && imageAttachments.length === 0 && pdfAttachments.length === 0 && !payload.content.trim()) {
+  } else if (link && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && !payload.content.trim()) {
     primaryType = 'link';
-  } else if (imageAttachments.length > 0 && pdfAttachments.length === 0 && !link && !payload.content.trim()) {
+  } else if (imageAttachments.length > 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && !link && !payload.content.trim()) {
     primaryType = 'image';
-  } else if (pdfAttachments.length > 0 && imageAttachments.length === 0 && !link && !payload.content.trim()) {
+  } else if (pdfAttachments.length > 0 && imageAttachments.length === 0 && mdAttachments.length === 0 && !link && !payload.content.trim()) {
     primaryType = 'pdf';
   } else {
     primaryType = 'text';
   }
 
   const fileUrlSerialized = hasAttachments ? JSON.stringify(attachments) : undefined;
-  const mainFileName = imageAttachments[0]?.name || pdfAttachments[0]?.name;
-  const mainFileSize = imageAttachments[0]?.size || pdfAttachments[0]?.size;
+  const mainFileName = imageAttachments[0]?.name || pdfAttachments[0]?.name || mdAttachments[0]?.name;
+  const mainFileSize = imageAttachments[0]?.size || pdfAttachments[0]?.size || mdAttachments[0]?.size;
 
   const newNote: Note = {
     id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `note_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -385,6 +411,7 @@ export async function updateNote(
   let link = payload.link_url?.trim() || undefined;
   const imageAttachments: NoteAttachmentFile[] = [...(payload.image_attachments || [])];
   const pdfAttachments: NoteAttachmentFile[] = [...(payload.pdf_attachments || [])];
+  const mdAttachments: NoteAttachmentFile[] = [...(payload.md_attachments || [])];
 
   // Upload any new image files (enforcing MAX_IMAGES_PER_NOTE)
   const remainingImageSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE - imageAttachments.length);
@@ -412,30 +439,42 @@ export async function updateNote(
     pdfAttachments.push(uploaded);
   }
 
+  // Upload any new Markdown files (enforcing MAX_MDS_PER_NOTE)
+  const remainingMdSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE - mdAttachments.length);
+  if (payload.md_files && payload.md_files.length > 0) {
+    const filesToUpload = payload.md_files.slice(0, remainingMdSlots);
+    for (const f of filesToUpload) {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, f, 'md');
+      mdAttachments.push(uploaded);
+    }
+  }
+
   const attachments: NoteAttachments = {
     link,
     images: imageAttachments,
     pdfs: pdfAttachments,
+    md_files: mdAttachments,
     image: imageAttachments[0],
     pdf: pdfAttachments[0],
+    md_file: mdAttachments[0],
   };
 
-  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0);
+  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0);
 
   let primaryType: NoteType = 'text';
-  if (link && imageAttachments.length === 0 && pdfAttachments.length === 0 && !payload.content.trim()) {
+  if (link && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && !payload.content.trim()) {
     primaryType = 'link';
-  } else if (imageAttachments.length > 0 && pdfAttachments.length === 0 && !link && !payload.content.trim()) {
+  } else if (imageAttachments.length > 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && !link && !payload.content.trim()) {
     primaryType = 'image';
-  } else if (pdfAttachments.length > 0 && imageAttachments.length === 0 && !link && !payload.content.trim()) {
+  } else if (pdfAttachments.length > 0 && imageAttachments.length === 0 && mdAttachments.length === 0 && !link && !payload.content.trim()) {
     primaryType = 'pdf';
   } else {
     primaryType = 'text';
   }
 
   const fileUrlSerialized = hasAttachments ? JSON.stringify(attachments) : null;
-  const mainFileName = imageAttachments[0]?.name || pdfAttachments[0]?.name || null;
-  const mainFileSize = imageAttachments[0]?.size || pdfAttachments[0]?.size || null;
+  const mainFileName = imageAttachments[0]?.name || pdfAttachments[0]?.name || mdAttachments[0]?.name || null;
+  const mainFileSize = imageAttachments[0]?.size || pdfAttachments[0]?.size || mdAttachments[0]?.size || null;
 
   const updatedNote: Note = {
     id: noteId,
@@ -510,6 +549,12 @@ export async function deleteNote(roomId: string, noteId: string): Promise<void> 
         noteToDelete.attachments.pdfs?.forEach((pdf) => {
           if (pdf.url.includes('/fastnote-files/')) {
             const path = pdf.url.split('/fastnote-files/')[1];
+            if (path) filePaths.push(decodeURIComponent(path));
+          }
+        });
+        noteToDelete.attachments.md_files?.forEach((md) => {
+          if (md.url.includes('/fastnote-files/')) {
+            const path = md.url.split('/fastnote-files/')[1];
             if (path) filePaths.push(decodeURIComponent(path));
           }
         });

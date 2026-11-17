@@ -12,7 +12,8 @@ import {
   Check, 
   Maximize2,
   Plus,
-  HardDrive
+  HardDrive,
+  FileCode
 } from 'lucide-react';
 import type { Note, NoteColor, NoteAttachmentFile } from '../types';
 import { extractDomain, formatBytes, timeAgo, NOTE_COLOR_MAP, isUrl, ATTACHMENT_LIMITS } from '../lib/utils';
@@ -33,6 +34,8 @@ interface NoteEditModalProps {
       image_attachments?: NoteAttachmentFile[];
       pdf_files?: File[];
       pdf_attachments?: NoteAttachmentFile[];
+      md_files?: File[];
+      md_attachments?: NoteAttachmentFile[];
     }
   ) => Promise<void>;
   onDelete: (noteId: string) => void;
@@ -70,11 +73,16 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
   const [existingPdfs, setExistingPdfs] = useState<NoteAttachmentFile[]>([]);
   const [newPdfFiles, setNewPdfFiles] = useState<File[]>([]);
 
+  // Existing & New MDs
+  const [existingMds, setExistingMds] = useState<NoteAttachmentFile[]>([]);
+  const [newMdFiles, setNewMdFiles] = useState<File[]>([]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const mdInputRef = useRef<HTMLInputElement>(null);
 
   // Sync state whenever note changes
   useEffect(() => {
@@ -107,6 +115,14 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         : [];
       setExistingPdfs(pdfs);
       setNewPdfFiles([]);
+
+      const mds = note.attachments?.md_files && note.attachments.md_files.length > 0
+        ? note.attachments.md_files
+        : note.attachments?.md_file
+        ? [note.attachments.md_file]
+        : [];
+      setExistingMds(mds);
+      setNewMdFiles([]);
     }
   }, [note, isOpen]);
 
@@ -134,7 +150,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, title, content, color, pinned, linkUrl, existingImages, newImages, existingPdfs, newPdfFiles]);
+  }, [isOpen, title, content, color, pinned, linkUrl, existingImages, newImages, existingPdfs, newPdfFiles, existingMds, newMdFiles]);
 
   if (!isOpen || !note) return null;
 
@@ -198,6 +214,30 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
     setNewPdfFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleAddNewMds = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const currentTotal = existingMds.length + newMdFiles.length;
+    const remainingSlots = ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE - currentTotal;
+    if (remainingSlots <= 0) return;
+
+    const mds: File[] = [];
+    for (let i = 0; i < files.length && mds.length < remainingSlots; i++) {
+      const file = files[i];
+      if (file.size <= ATTACHMENT_LIMITS.MAX_FILE_SIZE_BYTES && (file.name.endsWith('.md') || file.type === 'text/markdown' || file.name.endsWith('.markdown'))) {
+        mds.push(file);
+      }
+    }
+    setNewMdFiles((prev) => [...prev, ...mds]);
+  };
+
+  const handleRemoveExistingMd = (index: number) => {
+    setExistingMds((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewMd = (index: number) => {
+    setNewMdFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleCopyLink = () => {
     if (!linkUrl) return;
     navigator.clipboard.writeText(linkUrl);
@@ -225,6 +265,8 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         image_attachments: existingImages,
         pdf_files: newPdfFiles,
         pdf_attachments: existingPdfs,
+        md_files: newMdFiles,
+        md_attachments: existingMds,
       });
       onClose();
     } catch (err) {
@@ -236,6 +278,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
 
   const totalImagesCount = existingImages.length + newImages.length;
   const totalPdfsCount = existingPdfs.length + newPdfFiles.length;
+  const totalMdsCount = existingMds.length + newMdFiles.length;
 
   return (
     <div 
@@ -266,6 +309,17 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
           multiple
           onChange={(e) => {
             handleAddNewPdfs(e.target.files);
+            if (e.target) e.target.value = '';
+          }}
+        />
+        <input
+          type="file"
+          ref={mdInputRef}
+          className="hidden"
+          accept=".md,text/markdown,text/plain"
+          multiple
+          onChange={(e) => {
+            handleAddNewMds(e.target.files);
             if (e.target) e.target.value = '';
           }}
         />
@@ -397,6 +451,28 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                   <span>+ PDF</span>
                   <span className="text-[10px] font-mono opacity-70">
                     ({totalPdfsCount}/{ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE})
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+                  onClick={() => mdInputRef.current?.click()}
+                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
+                    totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE
+                      ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
+                      : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
+                  }`}
+                  title={
+                    totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE
+                      ? `Max ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} .md files reached`
+                      : `Add Markdown file (${totalMdsCount}/${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})`
+                  }
+                >
+                  <FileCode className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                  <span>+ .MD</span>
+                  <span className="text-[10px] font-mono opacity-70">
+                    ({totalMdsCount}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})
                   </span>
                 </button>
 
@@ -652,6 +728,93 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                         onClick={() => handleRemoveNewPdf(idx)}
                         className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
                         title="Remove PDF"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple MDs List */}
+            {totalMdsCount > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-[#8C8476] font-medium px-0.5">
+                  <span>Attached .MD Files ({totalMdsCount}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})</span>
+                  {totalMdsCount < ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE ? (
+                    <button
+                      type="button"
+                      onClick={() => mdInputRef.current?.click()}
+                      className="text-[#B45309] hover:underline flex items-center gap-0.5 text-[11px]"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add more</span>
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-amber-700 font-mono">Max limit reached</span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Existing MDs */}
+                  {existingMds.map((md, idx) => (
+                    <div 
+                      key={`existing_md_${md.url}_${idx}`}
+                      className="p-2 rounded-lg bg-white/90 border border-[#DDD7CD] flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <div className="w-7 h-7 rounded bg-[#F4F5F7] border border-[#E2E5EB] flex items-center justify-center text-indigo-700 shrink-0">
+                          <FileCode className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-semibold text-[#1A1815] truncate font-mono">{md.name}</p>
+                          <p className="text-[10px] font-mono text-[#8C8476]">{md.size ? formatBytes(md.size) : 'Markdown'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <a
+                          href={md.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 text-[#8C8476] hover:text-[#1A1815] rounded hover:bg-[#F4F2EE]"
+                          title="Open Markdown"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingMd(idx)}
+                          className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
+                          title="Remove Markdown"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* New MDs */}
+                  {newMdFiles.map((file, idx) => (
+                    <div 
+                      key={`new_md_${file.name}_${idx}`}
+                      className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/60 flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <div className="w-7 h-7 rounded bg-[#F4F5F7] border border-[#E2E5EB] flex items-center justify-center text-indigo-700 shrink-0">
+                          <FileCode className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-semibold text-[#1A1815] truncate font-mono">{file.name}</p>
+                          <p className="text-[10px] font-mono text-amber-800">New • {formatBytes(file.size)}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewMd(idx)}
+                        className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
+                        title="Remove Markdown"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

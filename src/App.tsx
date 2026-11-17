@@ -140,6 +140,8 @@ export function App() {
       image_attachments?: NoteAttachmentFile[];
       pdf_files?: File[];
       pdf_attachments?: NoteAttachmentFile[];
+      md_files?: File[];
+      md_attachments?: NoteAttachmentFile[];
     }
   ) => {
     try {
@@ -175,7 +177,7 @@ export function App() {
     }
   };
 
-  // Counts for 4 filters: All, Images, PDFs, Pinned
+  // Counts for filters: All, Images, PDFs, .MDs, Pinned
   const counts = useMemo(() => {
     return {
       all: notes.length,
@@ -188,6 +190,10 @@ export function App() {
         (n.attachments?.pdfs && n.attachments.pdfs.length > 0) ||
         n.attachments?.pdf ||
         (n.type === 'pdf' && n.file_url)
+      )).length,
+      md: notes.filter((n) => Boolean(
+        (n.attachments?.md_files && n.attachments.md_files.length > 0) ||
+        n.attachments?.md_file
       )).length,
       pinned: notes.filter((n) => n.pinned).length,
     };
@@ -214,6 +220,12 @@ export function App() {
             (note.type === 'pdf' && note.file_url)
           );
           if (!hasPdf) return false;
+        } else if (filter === 'md') {
+          const hasMd = Boolean(
+            (note.attachments?.md_files && note.attachments.md_files.length > 0) ||
+            note.attachments?.md_file
+          );
+          if (!hasMd) return false;
         }
 
         // Search query
@@ -224,8 +236,9 @@ export function App() {
           const matchLink = note.attachments?.link?.toLowerCase().includes(q);
           const matchImages = note.attachments?.images?.some((i) => i.name.toLowerCase().includes(q));
           const matchPdfs = note.attachments?.pdfs?.some((p) => p.name.toLowerCase().includes(q));
+          const matchMds = note.attachments?.md_files?.some((m) => m.name.toLowerCase().includes(q));
           const matchFileName = note.file_name?.toLowerCase().includes(q);
-          if (!matchTitle && !matchContent && !matchLink && !matchImages && !matchPdfs && !matchFileName) return false;
+          if (!matchTitle && !matchContent && !matchLink && !matchImages && !matchPdfs && !matchMds && !matchFileName) return false;
         }
 
         return true;

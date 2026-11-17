@@ -112,17 +112,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {/* Channel Pill */}
 
-
-          {/* Quick Connect Device (QR Code) Button */}
+          {/* QR Code Quick Pairing */}
           <button
             type="button"
             onClick={onOpenQrModal}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#1A1815] text-[#FAF9F7] hover:bg-[#2F2B26] transition-all text-xs font-medium shadow-paper active:scale-95 shrink-0 min-h-[32px]"
-            title="Pair with phone or another device"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-white border-[#DDD7CD] text-[#4D473E] hover:border-[#B8B0A2] transition-colors shrink-0 min-h-[32px]"
+            title="Scan QR Code to open on mobile"
           >
-            <QrCode className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden sm:inline">{currentDevice === 'mobile' ? 'Share Room' : 'Connect Phone'}</span>
-            <span className="sm:hidden text-xs">Pair</span>
+            <QrCode className="w-3.5 h-3.5 text-[#8C8476]" />
           </button>
 
           {/* Supabase Cloud Status Indicator */}

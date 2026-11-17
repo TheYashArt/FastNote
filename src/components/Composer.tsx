@@ -11,7 +11,8 @@ import {
   Plus,
   AlertCircle,
   HardDrive,
-  ExternalLink
+  ExternalLink,
+  FileCode
 } from 'lucide-react';
 import type { NoteColor, NewNotePayload } from '../types';
 import { isUrl, extractDomain, formatBytes, NOTE_COLOR_MAP, ATTACHMENT_LIMITS } from '../lib/utils';
@@ -37,15 +38,17 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
 
-  // Multiple Images & Multiple PDFs
+  // Multiple Images & Multiple PDFs & Multiple MDs
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
+  const [mdFiles, setMdFiles] = useState<File[]>([]);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   const [isDragging, setIsDragging] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const mdInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Clean image previews on unmount
@@ -198,6 +201,43 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
     setPdfFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Add selected MDs with limit checking
+  const handleAddMds = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remainingSlots = ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE - mdFiles.length;
+
+    if (remainingSlots <= 0) {
+      showTemporaryNotice(`Max ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} .md files reached. Upload extra files to Google Drive.`);
+      return;
+    }
+
+    const newMds: File[] = [];
+    let oversizeCount = 0;
+
+    for (let i = 0; i < files.length && newMds.length < remainingSlots; i++) {
+      const file = files[i];
+      if (file.size > ATTACHMENT_LIMITS.MAX_FILE_SIZE_BYTES) {
+        oversizeCount++;
+        continue;
+      }
+      if (file.name.endsWith('.md') || file.type === 'text/markdown' || file.name.endsWith('.markdown')) {
+        newMds.push(file);
+      }
+    }
+
+    if (files.length > remainingSlots) {
+      showTemporaryNotice(`Added ${remainingSlots} .md files (max reached). Upload remaining to Google Drive.`);
+    } else if (oversizeCount > 0) {
+      showTemporaryNotice('Files >25 MB skipped. Upload larger files to Google Drive and paste link.');
+    }
+
+    setMdFiles((prev) => [...prev, ...newMds]);
+  };
+
+  const handleRemoveMd = (index: number) => {
+    setMdFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Drag and drop handlers
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
@@ -219,6 +259,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
     if (e.dataTransfer.files) {
       const imgList: File[] = [];
       const pdfList: File[] = [];
+      const mdList: File[] = [];
 
       for (let i = 0; i < e.dataTransfer.files.length; i++) {
         const droppedFile = e.dataTransfer.files[i];
@@ -226,6 +267,8 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
           imgList.push(droppedFile);
         } else if (droppedFile.type === 'application/pdf' || droppedFile.name.endsWith('.pdf')) {
           pdfList.push(droppedFile);
+        } else if (droppedFile.name.endsWith('.md') || droppedFile.type === 'text/markdown' || droppedFile.name.endsWith('.markdown')) {
+          mdList.push(droppedFile);
         }
       }
 
@@ -255,6 +298,17 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
           showTemporaryNotice(`PDFs capped at ${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE} max. Upload more to Google Drive.`);
         }
       }
+
+      if (mdList.length > 0) {
+        const remainingMdSlots = ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE - mdFiles.length;
+        const toAdd = mdList.slice(0, Math.max(0, remainingMdSlots));
+        if (toAdd.length > 0) {
+          setMdFiles((prev) => [...prev, ...toAdd]);
+        }
+        if (mdList.length > remainingMdSlots) {
+          showTemporaryNotice(`.md files capped at ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} max. Upload more to Google Drive.`);
+        }
+      }
     }
   };
 
@@ -264,7 +318,8 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
     title.trim() ||
     linkUrl.trim() ||
     imageItems.length > 0 ||
-    pdfFiles.length > 0
+    pdfFiles.length > 0 ||
+    mdFiles.length > 0
   );
 
   // Submit note
@@ -286,6 +341,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         link_url: finalLink || undefined,
         image_files: imageItems.map((item) => item.file),
         pdf_files: pdfFiles,
+        md_files: mdFiles,
       });
 
       // Reset form
@@ -298,6 +354,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       });
       setImageItems([]);
       setPdfFiles([]);
+      setMdFiles([]);
       setIsPinned(false);
     } catch (err) {
       console.error('Failed to submit note:', err);
@@ -315,6 +372,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
   const currentColorConfig = NOTE_COLOR_MAP[selectedColor];
   const isImageLimitReached = imageItems.length >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE;
   const isPdfLimitReached = pdfFiles.length >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE;
+  const isMdLimitReached = mdFiles.length >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE;
 
   return (
     <div
@@ -395,6 +453,30 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             </span>
           </button>
 
+          {/* Multiple MD files button (with counter e.g. 0/3) */}
+          <button
+            type="button"
+            disabled={isMdLimitReached}
+            onClick={() => mdInputRef.current?.click()}
+            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isMdLimitReached
+              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
+              : mdFiles.length > 0
+                ? 'bg-[#1A1815] text-white shadow-xs'
+                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
+              }`}
+            title={
+              isMdLimitReached
+                ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} .md files max`
+                : `Attach Markdown files (${mdFiles.length}/${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})`
+            }
+          >
+            <FileCode className="w-3.5 h-3.5" />
+            <span>.MD</span>
+            <span className={`text-[10px] font-mono ${mdFiles.length > 0 ? 'text-amber-300 font-bold' : 'text-[#8C8476]'}`}>
+              {mdFiles.length}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+            </span>
+          </button>
+
           {/* Google Drive Backup Link */}
           <a
             href="https://drive.google.com"
@@ -448,6 +530,17 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
           if (e.target) e.target.value = '';
         }}
       />
+      <input
+        type="file"
+        ref={mdInputRef}
+        className="hidden"
+        accept=".md,text/markdown,text/plain"
+        multiple
+        onChange={(e) => {
+          handleAddMds(e.target.files);
+          if (e.target) e.target.value = '';
+        }}
+      />
 
       {/* Limit Notice banner if user exceeded cap */}
       {limitNotice && (
@@ -494,7 +587,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         </div>
 
         {/* Active Attachments Drawer */}
-        {(showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0) && (
+        {(showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0 || mdFiles.length > 0) && (
           <div className="pt-2 border-t border-[#EBE7E0]/70 space-y-2.5 animate-in fade-in duration-150">
 
             {/* Google Drive Backup Guidance Strip */}
@@ -642,6 +735,55 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                         onClick={() => handleRemovePdf(idx)}
                         className="p-1 rounded text-[#8C8476] hover:text-rose-700 hover:bg-rose-50 transition-colors"
                         title="Remove PDF"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple Attached MDs List */}
+            {mdFiles.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-[#8C8476] font-medium px-0.5">
+                  <span>
+                    .MD Files ({mdFiles.length}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})
+                  </span>
+                  {!isMdLimitReached ? (
+                    <button
+                      type="button"
+                      onClick={() => mdInputRef.current?.click()}
+                      className="text-[#B45309] hover:underline flex items-center gap-0.5 text-[11px]"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add more</span>
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-amber-700 font-mono">Max limit reached</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {mdFiles.map((file, idx) => (
+                    <div
+                      key={`md_${file.name}_${idx}`}
+                      className="relative group p-2 rounded-lg bg-white/90 border border-[#DDD7CD] shadow-2xs flex items-center justify-between gap-2 overflow-hidden"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <div className="w-7 h-7 rounded bg-[#F4F5F7] border border-[#E2E5EB] flex items-center justify-center text-indigo-700 shrink-0">
+                          <FileCode className="w-4 h-4" />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-semibold text-[#1A1815] truncate font-mono">{file.name}</p>
+                          <p className="text-[10px] font-mono text-[#8C8476]">{formatBytes(file.size)}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMd(idx)}
+                        className="p-1 rounded text-[#8C8476] hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                        title="Remove Markdown file"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

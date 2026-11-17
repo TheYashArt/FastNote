@@ -3,6 +3,8 @@ import type { NoteColor } from '../types';
 export const ATTACHMENT_LIMITS = {
   MAX_IMAGES_PER_NOTE: 5,
   MAX_PDFS_PER_NOTE: 3,
+  MAX_MDS_PER_NOTE: 10,
+  MAX_MDS_PER_NOTE: 3,
   MAX_FILE_SIZE_BYTES: 25 * 1024 * 1024, // 25 MB limit per file
 };
 

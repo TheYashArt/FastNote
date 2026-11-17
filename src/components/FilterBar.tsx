@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, X, Pin, Image as ImageIcon, FileCheck, Layers } from 'lucide-react';
+import { Search, X, Pin, Image as ImageIcon, FileCheck, Layers, FileCode } from 'lucide-react';
 
-export type FilterOption = 'all' | 'image' | 'pdf' | 'pinned';
+export type FilterOption = 'all' | 'image' | 'pdf' | 'md' | 'pinned';
 
 interface FilterBarProps {
   currentFilter: FilterOption;
@@ -12,6 +12,7 @@ interface FilterBarProps {
     all: number;
     image: number;
     pdf: number;
+    md: number;
     pinned: number;
   };
 }
@@ -86,6 +87,27 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               currentFilter === 'pdf' ? 'bg-[#2F2B26] text-amber-300' : 'bg-[#F4F2EE] text-[#8C8476]'
             }`}>
               {counts.pdf}
+            </span>
+          )}
+        </button>
+
+        {/* 4. MDs */}
+        <button
+          type="button"
+          onClick={() => onFilterChange('md')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+            currentFilter === 'md'
+              ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
+              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
+          }`}
+        >
+          <FileCode className="w-3.5 h-3.5" />
+          <span>.MD</span>
+          {counts.md > 0 && (
+            <span className={`text-[10px] font-mono px-1 rounded ${
+              currentFilter === 'md' ? 'bg-[#2F2B26] text-amber-300' : 'bg-[#F4F2EE] text-[#8C8476]'
+            }`}>
+              {counts.md}
             </span>
           )}
         </button>
