@@ -253,26 +253,27 @@ export function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
         
-        {/* Intro banner on quick pass */}
-        <section className="mb-5 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-[#EBE7E0]">
-            <div>
-              <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-[#1A1815]">
+        {/* Intro banner on quick pass (compact & two-column layout on mobile) */}
+        <section className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between gap-3 pb-2 sm:pb-2.5 border-b border-[#EBE7E0]">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-2xl font-bold tracking-tight text-[#1A1815] truncate sm:whitespace-normal">
                 Device Clipboard & Sticky Notes
               </h1>
-              <p className="text-xs text-[#8C8476] mt-0.5 leading-relaxed">
-                Pass text, links, screenshots, and PDFs to your phone, tablet, or another computer instantly.
+              <p className="text-[11px] sm:text-xs text-[#8C8476] mt-0.5 leading-tight sm:leading-relaxed truncate sm:whitespace-normal">
+                Pass text, links, screenshots, and PDFs across devices instantly.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="shrink-0 flex items-center">
               <button
                 type="button"
                 onClick={() => setIsQrModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors min-h-[32px] sm:min-h-0 active:scale-95"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors min-h-[32px] sm:min-h-0 active:scale-95 shadow-2xs whitespace-nowrap"
               >
                 <Smartphone className="w-3.5 h-3.5 text-[#8C8476]" />
-                <span>Pair Devices</span>
+                <span className="hidden xs:inline">Pair Devices</span>
+                <span className="xs:hidden">Pair</span>
               </button>
             </div>
           </div>
@@ -292,26 +293,26 @@ export function App() {
           counts={counts}
         />
 
-        {/* Notes Grid — Equal note size for all notes */}
+        {/* Notes Grid — Equal note size for all notes (2-column on mobile, 3-column on lg) */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 items-stretch">
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-[350px] rounded-xl border border-[#EBE7E0] bg-white/60 p-4 animate-pulse flex flex-col justify-between"
+                className="h-[280px] sm:h-[350px] rounded-xl border border-[#EBE7E0] bg-white/60 p-3 sm:p-4 animate-pulse flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <div className="w-16 h-4 bg-[#F4F2EE] rounded" />
-                    <div className="w-10 h-4 bg-[#F4F2EE] rounded" />
+                    <div className="w-12 sm:w-16 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+                    <div className="w-8 sm:w-10 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
                   </div>
-                  <div className="w-3/4 h-4 bg-[#F4F2EE] rounded" />
+                  <div className="w-3/4 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
                   <div className="space-y-1.5">
-                    <div className="w-full h-3 bg-[#F4F2EE] rounded" />
-                    <div className="w-5/6 h-3 bg-[#F4F2EE] rounded" />
+                    <div className="w-full h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
+                    <div className="w-5/6 h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
                   </div>
                 </div>
-                <div className="w-20 h-4 bg-[#F4F2EE] rounded" />
+                <div className="w-16 sm:w-20 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
               </div>
             ))}
           </div>
@@ -325,7 +326,7 @@ export function App() {
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 items-stretch">
             {filteredNotes.map((note) => (
               <NoteCard
                 key={note.id}
@@ -350,21 +351,21 @@ export function App() {
             <span className="font-semibold text-[#1A1815]">FastNote</span>
             <span>&bull;</span>
             <span>Zero-login quick device drop</span>
-            <span>&bull;</span>
-            <button
+            {/* <span>&bull;</span> */}
+            {/* <button
               type="button"
               onClick={() => setIsSupabaseModalOpen(true)}
               className="text-[#B45309] hover:underline"
             >
               {isCloudSynced ? 'Supabase Connected' : 'Connect Supabase Cloud'}
-            </button>
+            </button> */}
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-[11px]">
+          {/* <div className="flex items-center gap-3 font-mono text-[11px]">
             <span>Vite + React</span>
             <span>&bull;</span>
             <span>Ready for Vercel & Netlify</span>
-          </div>
+          </div> */}
         </div>
       </footer>
 

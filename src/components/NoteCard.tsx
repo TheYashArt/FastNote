@@ -115,17 +115,17 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   return (
     <article
       onClick={() => onEdit(note)}
-      className={`group relative rounded-xl border p-4 transition-all duration-200 shadow-paper hover:shadow-paper-hover flex flex-col justify-between cursor-pointer overflow-hidden h-[350px] ${
+      className={`group relative rounded-xl border p-3 sm:p-4 transition-all duration-200 shadow-paper hover:shadow-paper-hover flex flex-col justify-between cursor-pointer overflow-hidden h-[280px] sm:h-[350px] ${
         colorConfig.bg
       } ${colorConfig.border} ${
         note.pinned ? 'ring-1 ring-amber-500/30' : ''
       }`}
     >
       {/* 1. Top Meta Bar */}
-      <div className="shrink-0 mb-2">
-        <div className="flex items-center justify-between gap-2">
+      <div className="shrink-0 mb-1.5 sm:mb-2">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Attachment & Device Icons (No text labels) */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
             {showTextBody && (
               <span 
                 className={`inline-flex items-center justify-center p-1 rounded-md ${colorConfig.badge}`}
@@ -188,7 +188,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
           {/* Right: Edit, Pin & Delete actions (accessible on mobile without hover) */}
           <div className="flex items-center gap-1 sm:gap-0.5">
-            <button
+            {/* <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
@@ -198,7 +198,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               title="Open and edit note"
             >
               <Pencil className="w-3.5 h-3.5" />
-            </button>
+            </button> */}
 
             <button
               type="button"
@@ -216,7 +216,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-amber-600' : ''}`} />
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
@@ -226,7 +226,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               title="Delete note"
             >
               <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -401,12 +401,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       </div>
 
       {/* 3. Card Footer (Uniformly pinned at bottom) */}
-      <div className="shrink-0 pt-2 border-t border-[#EBE7E0]/60 flex items-center justify-between text-xs text-[#8C8476]">
-        <div className="flex items-center gap-1.5">
+      <div className="shrink-0 pt-1.5 sm:pt-2 border-t border-[#EBE7E0]/60 flex items-center justify-between text-xs text-[#8C8476]">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             type="button"
             onClick={handleCopyAll}
-            className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-xs font-medium ${
+            className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded transition-colors text-xs font-medium ${
               isCopied
                 ? 'text-emerald-700 bg-emerald-50'
                 : 'text-[#4D473E] hover:text-[#1A1815] hover:bg-black/[0.04]'
@@ -416,12 +416,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             {isCopied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Copied!</span>
+                <span className="hidden xs:inline">Copied!</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>Copy</span>
+                <span className="hidden xs:inline">Copy</span>
               </>
             )}
           </button>
@@ -432,16 +432,27 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               e.stopPropagation();
               onEdit(note);
             }}
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-[#8C8476] hover:text-[#1A1815] hover:bg-black/[0.04] transition-colors"
+            className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded text-xs font-medium text-[#8C8476] hover:text-[#1A1815] hover:bg-black/[0.04] transition-colors"
             title="Open and edit note"
           >
             <Pencil className="w-3 h-3" />
-            <span>Edit</span>
+            <span className="hidden xs:inline">Edit</span>
           </button>
+          <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(note.id);
+              }}
+              className="p-1.5 sm:p-1 rounded text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-rose-700 hover:bg-rose-50 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90"
+              title="Delete note"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
         </div>
 
         {note.pinned && (
-          <span className="text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
             Pinned
           </span>
         )}

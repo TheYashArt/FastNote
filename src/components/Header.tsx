@@ -68,50 +68,50 @@ export const Header: React.FC<HeaderProps> = ({
             <p className="text-[11px] text-[#8C8476] hidden md:block">Quick device clipboard & notes</p>
           </div>
         </div>
+        <div className="flex items-center bg-white border border-[#DDD7CD] rounded-lg px-2 sm:px-2.5 py-1 text-xs shadow-paper min-w-0">
+          <span className="text-[#8C8476] mr-1 font-medium hidden md:inline">Sync Channel:</span>
+          {isEditingRoom ? (
+            <form onSubmit={handleRoomSubmit} className="flex items-center gap-1">
+              <input
+                type="text"
+                value={roomInput}
+                onChange={(e) => setRoomInput(e.target.value)}
+                onBlur={() => setIsEditingRoom(false)}
+                autoFocus
+                className="font-mono text-xs text-[#1A1815] bg-[#F4F2EE] px-1 py-0.5 rounded outline-none border border-amber-500 w-20 sm:w-24"
+                maxLength={16}
+              />
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setRoomInput(roomId);
+                setIsEditingRoom(true);
+              }}
+              title="Tap to rename sync channel"
+              className="font-mono font-medium text-[#1A1815] hover:text-[#B45309] hover:underline flex items-center gap-1 group truncate max-w-[100px] sm:max-w-none text-xs"
+            >
+              <span className="truncate">#{roomId}</span>
+              <span className="text-[10px] text-[#8C8476] group-hover:text-[#B45309] shrink-0">({totalNotes})</span>
+            </button>
+          )}
 
+          <div className="w-px h-3.5 bg-[#EBE7E0] mx-1 sm:mx-2 shrink-0" />
+
+          <button
+            type="button"
+            onClick={handleCopyShareLink}
+            title="Copy room link"
+            className="text-[#8C8476] hover:text-[#1A1815] transition-colors p-1 sm:p-0.5 rounded shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center active:scale-90"
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
         {/* Center / Actions: Channel Pill & Quick Pairing */}
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {/* Channel Pill */}
-          <div className="flex items-center bg-white border border-[#DDD7CD] rounded-lg px-2 sm:px-2.5 py-1 text-xs shadow-paper min-w-0">
-            <span className="text-[#8C8476] mr-1 font-medium hidden md:inline">Sync Channel:</span>
-            {isEditingRoom ? (
-              <form onSubmit={handleRoomSubmit} className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={roomInput}
-                  onChange={(e) => setRoomInput(e.target.value)}
-                  onBlur={() => setIsEditingRoom(false)}
-                  autoFocus
-                  className="font-mono text-xs text-[#1A1815] bg-[#F4F2EE] px-1 py-0.5 rounded outline-none border border-amber-500 w-20 sm:w-24"
-                  maxLength={16}
-                />
-              </form>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setRoomInput(roomId);
-                  setIsEditingRoom(true);
-                }}
-                title="Tap to rename sync channel"
-                className="font-mono font-medium text-[#1A1815] hover:text-[#B45309] hover:underline flex items-center gap-1 group truncate max-w-[100px] sm:max-w-none text-xs"
-              >
-                <span className="truncate">#{roomId}</span>
-                <span className="text-[10px] text-[#8C8476] group-hover:text-[#B45309] shrink-0">({totalNotes})</span>
-              </button>
-            )}
 
-            <div className="w-px h-3.5 bg-[#EBE7E0] mx-1 sm:mx-2 shrink-0" />
-
-            <button
-              type="button"
-              onClick={handleCopyShareLink}
-              title="Copy room link"
-              className="text-[#8C8476] hover:text-[#1A1815] transition-colors p-1 sm:p-0.5 rounded shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center active:scale-90"
-            >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-          </div>
 
           {/* Quick Connect Device (QR Code) Button */}
           <button
@@ -136,9 +136,6 @@ export const Header: React.FC<HeaderProps> = ({
             title="Configure Supabase Cloud Storage"
           >
             <Database className={`w-3.5 h-3.5 shrink-0 ${isCloudSynced ? 'text-emerald-600' : 'text-[#8C8476]'}`} />
-            <span className="hidden lg:inline">
-              {isCloudSynced ? 'Supabase Synced' : 'Cloud Setup'}
-            </span>
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCloudSynced ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                 }`}

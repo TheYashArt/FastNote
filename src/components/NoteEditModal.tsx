@@ -239,11 +239,11 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div 
-        className={`w-full max-w-2xl rounded-t-2xl sm:rounded-2xl border-t sm:border ${colorConfig.border} ${colorConfig.bg} shadow-elevated overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-150`}
+        className={`w-full max-w-lg sm:max-w-2xl max-h-[88vh] sm:max-h-[85vh] rounded-2xl border ${colorConfig.border} ${colorConfig.bg} shadow-elevated flex flex-col animate-in zoom-in-95 duration-150 overflow-hidden my-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Hidden Multi-File Inputs */}
@@ -271,7 +271,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         />
 
         {/* Modal Top Chrome */}
-        <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-4 sm:px-6 py-3 bg-white/50">
+        <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-4 sm:px-6 py-2.5 sm:py-3 bg-white/60 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#1A1815] uppercase tracking-wider font-mono">
               Edit Sticky Note
@@ -286,7 +286,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
             <button
               type="button"
               onClick={() => setPinned(!pinned)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors ${
                 pinned
                   ? 'bg-amber-100 text-amber-800'
                   : 'text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5'
@@ -301,7 +301,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5 transition-colors"
+              className="p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -310,7 +310,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4">
+        <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 space-y-4">
           
           {/* Note Title Input (text-base prevents iOS auto-zoom) */}
           <div>
@@ -334,7 +334,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={4}
+              rows={3}
               placeholder="Write your note, instructions, or clipboard text here..."
               className="w-full bg-white/70 border border-[#DDD7CD] rounded-lg p-3 text-base sm:text-sm text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] resize-y leading-relaxed font-normal"
             />
@@ -346,12 +346,12 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
               <span className="text-[11px] font-semibold text-[#8C8476] uppercase tracking-wider">
                 Attachments
               </span>
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                 {!showLinkInput && !linkUrl && (
                   <button
                     type="button"
                     onClick={() => setShowLinkInput(true)}
-                    className="flex items-center gap-1 text-xs sm:text-[11px] text-[#4D473E] hover:text-[#1A1815] px-2.5 py-1.5 sm:py-0.5 rounded bg-white/60 border border-[#DDD7CD] min-h-[32px] sm:min-h-0"
+                    className="flex items-center gap-1 text-xs sm:text-[11px] text-[#4D473E] hover:text-[#1A1815] px-2.5 py-1.5 sm:py-0.5 rounded bg-white/60 border border-[#DDD7CD] shrink-0 min-h-[32px] sm:min-h-0"
                   >
                     <Link2 className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                     <span>+ Link</span>
@@ -361,7 +361,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                   type="button"
                   disabled={totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
                   onClick={() => imageInputRef.current?.click()}
-                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors min-h-[32px] sm:min-h-0 ${
+                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
                     totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE
                       ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
                       : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
@@ -382,7 +382,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                   type="button"
                   disabled={totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
                   onClick={() => pdfInputRef.current?.click()}
-                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors min-h-[32px] sm:min-h-0 ${
+                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
                     totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE
                       ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
                       : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
@@ -406,7 +406,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setShowLinkInput(true)}
-                  className="flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD] transition-colors min-h-[32px] sm:min-h-0"
+                  className="flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD] transition-colors shrink-0 min-h-[32px] sm:min-h-0"
                   title="Upload larger or multiple files to Google Drive, then paste link"
                 >
                   <HardDrive className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-amber-700" />
@@ -691,8 +691,8 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
 
         </div>
 
-        {/* Modal Action Footer with safe-area padding for mobile home indicators */}
-        <div className="border-t border-[#EBE7E0]/80 px-4 sm:px-6 py-3.5 pb-safe bg-white/80 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0">
+        {/* Modal Action Footer */}
+        <div className="border-t border-[#EBE7E0]/80 px-4 sm:px-6 py-3 sm:py-3.5 bg-white/80 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 rounded-b-2xl">
           {/* Delete Action */}
           <button
             type="button"
