@@ -251,16 +251,16 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
         
         {/* Intro banner on quick pass */}
-        <section className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#EBE7E0]">
+        <section className="mb-5 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-[#EBE7E0]">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1A1815]">
+              <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-[#1A1815]">
                 Device Clipboard & Sticky Notes
               </h1>
-              <p className="text-xs text-[#8C8476] mt-0.5">
+              <p className="text-xs text-[#8C8476] mt-0.5 leading-relaxed">
                 Pass text, links, screenshots, and PDFs to your phone, tablet, or another computer instantly.
               </p>
             </div>
@@ -269,17 +269,17 @@ export function App() {
               <button
                 type="button"
                 onClick={() => setIsQrModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors min-h-[32px] sm:min-h-0 active:scale-95"
               >
                 <Smartphone className="w-3.5 h-3.5 text-[#8C8476]" />
-                <span>Pair Mobile Camera</span>
+                <span>Pair Devices</span>
               </button>
             </div>
           </div>
         </section>
 
         {/* Note Composer */}
-        <section className="mb-8">
+        <section className="mb-6 sm:mb-8">
           <Composer onAddNote={handleAddNote} isSubmitting={isSubmitting} />
         </section>
 
@@ -401,11 +401,11 @@ export function App() {
         onOpenImageLightbox={(url, title) => setLightboxImage({ url, title })}
       />
 
-      {/* Toast Feedback */}
+      {/* Toast Feedback (responsive anchor & safe area) */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#1A1815] text-[#FAF9F7] px-3.5 py-2 rounded-lg text-xs font-medium shadow-elevated flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <Check className="w-3.5 h-3.5 text-amber-400" />
-          <span>{toastMessage}</span>
+        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 z-50 bg-[#1A1815] text-[#FAF9F7] px-4 py-2.5 rounded-lg text-xs font-medium shadow-elevated flex items-center justify-center sm:justify-start gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="truncate">{toastMessage}</span>
         </div>
       )}
     </div>

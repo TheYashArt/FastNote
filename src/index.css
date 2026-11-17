@@ -5,12 +5,15 @@
 @layer base {
   html {
     color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
-  
+
   body {
     background-color: #F9F8F6;
     color: #1A1815;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overscroll-behavior-y: none;
   }
 
   /* Custom subtle scrollbar */
@@ -18,21 +21,38 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     background: #DDD7CD;
     border-radius: 9999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: #B8B0A2;
   }
+
+  /* Touch scrolling smoothness */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Safe area padding utilities for mobile notches / home bars */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
 }
 
 /* Subtle paper texture highlight */
 .paper-grid {
   background-size: 24px 24px;
-  background-image: 
+  background-image:
     radial-gradient(circle, #E6E2D8 0.75px, transparent 0.75px);
 }

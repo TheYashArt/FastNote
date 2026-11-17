@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { DragEvent } from 'react';
-import { 
-  Link2, 
-  Image as ImageIcon, 
-  FileCheck, 
-  Pin, 
-  Send, 
-  X, 
+import {
+  Link2,
+  Image as ImageIcon,
+  FileCheck,
+  Pin,
+  Send,
+  X,
   FileIcon,
   Plus,
   AlertCircle,
@@ -321,28 +321,25 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`rounded-xl border transition-all duration-200 shadow-paper relative overflow-hidden ${
-        currentColorConfig.bg
-      } ${currentColorConfig.border} ${
-        isDragging ? 'ring-2 ring-amber-500 border-amber-500 scale-[1.005]' : ''
-      }`}
+      className={`rounded-xl border transition-all duration-200 shadow-paper relative overflow-hidden ${currentColorConfig.bg
+        } ${currentColorConfig.border} ${isDragging ? 'ring-2 ring-amber-500 border-amber-500 scale-[1.005]' : ''
+        }`}
     >
       {/* Top Composer Header: Quick actions & Pin toggle */}
-      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2.5 bg-white/50">
-        
-        {/* Attachment Adders with live limit counts */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-medium text-[#8C8476] mr-1 hidden sm:inline">Attach:</span>
-          
+      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2 bg-white/50 gap-2">
+
+        {/* Attachment Adders with live limit counts (scrollable on narrow mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 min-w-0">
+          <span className="text-[11px] font-medium text-[#8C8476] mr-0.5 hidden sm:inline shrink-0">Attach:</span>
+
           {/* Link button */}
           <button
             type="button"
             onClick={() => setShowLinkInput(!showLinkInput)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-              showLinkInput || linkUrl.trim()
-                ? 'bg-[#1A1815] text-white shadow-xs'
-                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0]'
-            }`}
+            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${showLinkInput || linkUrl.trim()
+              ? 'bg-[#1A1815] text-white shadow-xs'
+              : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
+              }`}
             title="Attach a URL link"
           >
             <Link2 className="w-3.5 h-3.5" />
@@ -355,13 +352,12 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             type="button"
             disabled={isImageLimitReached}
             onClick={() => imageInputRef.current?.click()}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-              isImageLimitReached
-                ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
-                : imageItems.length > 0
+            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isImageLimitReached
+              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
+              : imageItems.length > 0
                 ? 'bg-[#1A1815] text-white shadow-xs'
-                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0]'
-            }`}
+                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
+              }`}
             title={
               isImageLimitReached
                 ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE} images max`
@@ -380,13 +376,12 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             type="button"
             disabled={isPdfLimitReached}
             onClick={() => pdfInputRef.current?.click()}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-              isPdfLimitReached
-                ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
-                : pdfFiles.length > 0
+            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isPdfLimitReached
+              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
+              : pdfFiles.length > 0
                 ? 'bg-[#1A1815] text-white shadow-xs'
-                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0]'
-            }`}
+                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
+              }`}
             title={
               isPdfLimitReached
                 ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE} PDFs max`
@@ -406,11 +401,11 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setShowLinkInput(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] hover:text-[#1A1815] transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] hover:text-[#1A1815] transition-colors shrink-0 min-h-[32px] sm:min-h-0"
             title="Backup plan: Upload larger or multiple files to Google Drive and paste the link here"
           >
             <HardDrive className="w-3.5 h-3.5 text-amber-700" />
-            <span>Drive Backup</span>
+            <span className="whitespace-nowrap">Drive</span>
             <ExternalLink className="w-2.5 h-2.5 opacity-60" />
           </a>
         </div>
@@ -419,11 +414,10 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         <button
           type="button"
           onClick={() => setIsPinned(!isPinned)}
-          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${
-            isPinned
-              ? 'bg-amber-100 text-amber-800 font-medium'
-              : 'text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE]'
-          }`}
+          className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isPinned
+            ? 'bg-amber-100 text-amber-800 font-medium'
+            : 'text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE]'
+            }`}
           title={isPinned ? 'Note will be pinned to top' : 'Pin note to top'}
         >
           <Pin className={`w-3.5 h-3.5 ${isPinned ? 'fill-amber-700 text-amber-700' : ''}`} />
@@ -476,17 +470,17 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
 
       {/* Main Composer Content Area */}
       <div className="p-3 sm:p-4 space-y-3">
-        {/* Optional Title */}
+        {/* Optional Title (text-base on mobile prevents iOS safari auto-zoom) */}
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Note title (optional)"
-          className="w-full bg-transparent text-sm font-semibold text-[#1A1815] placeholder-[#B8B0A2] outline-none border-b border-transparent focus:border-[#DDD7CD] pb-1 transition-colors tracking-tight"
+          className="w-full bg-transparent text-base sm:text-sm font-semibold text-[#1A1815] placeholder-[#B8B0A2] outline-none border-b border-transparent focus:border-[#DDD7CD] pb-1 transition-colors tracking-tight"
         />
 
-        {/* Note Body Textarea */}
+        {/* Note Body Textarea (text-base on mobile prevents iOS safari auto-zoom) */}
         <div>
           <textarea
             ref={textareaRef}
@@ -495,20 +489,20 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             onKeyDown={handleKeyDown}
             rows={3}
             placeholder="Type your note, thoughts, instructions, or paste anything (Ctrl+V)..."
-            className="w-full bg-transparent text-sm text-[#1A1815] placeholder-[#8C8476] outline-none resize-none leading-relaxed"
+            className="w-full bg-transparent text-base sm:text-sm text-[#1A1815] placeholder-[#8C8476] outline-none resize-none leading-relaxed"
           />
         </div>
 
         {/* Active Attachments Drawer */}
         {(showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0) && (
           <div className="pt-2 border-t border-[#EBE7E0]/70 space-y-2.5 animate-in fade-in duration-150">
-            
+
             {/* Google Drive Backup Guidance Strip */}
-            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-black/[0.02] border border-[#DDD7CD]/70 text-[11px] text-[#6E675F]">
+            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-black/[0.02] border border-[#DDD7CD]/70 text-[11px] text-[#6E675F] gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 <HardDrive className="w-3.5 h-3.5 text-amber-700 shrink-0" />
                 <span className="truncate">
-                  Need to send larger or multiple files? Upload to Drive and paste the share link.
+                  For large/bulk files: Upload to Drive & paste link.
                 </span>
               </div>
               <a
@@ -516,10 +510,10 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowLinkInput(true)}
-                className="shrink-0 flex items-center gap-1 font-medium text-amber-800 hover:text-amber-950 hover:underline ml-2"
+                className="shrink-0 flex items-center gap-1 font-medium text-amber-800 hover:text-amber-950 hover:underline text-[11px]"
                 title="Open Google Drive to upload files"
               >
-                <span>Google Drive</span>
+                <span>Drive</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -533,16 +527,15 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Paste URL or Google Drive link (https://drive.google.com/...)"
-                  className="w-full bg-transparent text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono"
+                  placeholder="Paste URL or Google Drive link..."
+                  className="w-full bg-transparent text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono"
                   autoFocus
                 />
                 {linkUrl && isUrl(linkUrl) && (
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
-                    linkUrl.includes('drive.google.com') 
-                      ? 'bg-amber-100 text-amber-900 font-medium' 
-                      : 'bg-[#F4F2EE] text-[#8C8476]'
-                  }`}>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 hidden sm:inline-block ${linkUrl.includes('drive.google.com')
+                    ? 'bg-amber-100 text-amber-900 font-medium'
+                    : 'bg-[#F4F2EE] text-[#8C8476]'
+                    }`}>
                     {linkUrl.includes('drive.google.com') ? 'Google Drive' : extractDomain(linkUrl)}
                   </span>
                 )}
@@ -552,7 +545,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                     setLinkUrl('');
                     setShowLinkInput(false);
                   }}
-                  className="text-[#8C8476] hover:text-rose-700 p-0.5"
+                  className="text-[#8C8476] hover:text-rose-700 p-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
                   title="Remove link"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -582,8 +575,8 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {imageItems.map((item) => (
-                    <div 
-                      key={item.id} 
+                    <div
+                      key={item.id}
                       className="relative group p-1.5 rounded-lg bg-white/90 border border-[#DDD7CD] shadow-2xs flex items-center gap-2 overflow-hidden"
                     >
                       <img
@@ -664,10 +657,10 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       </div>
 
       {/* Bottom Action Footer: Stationery Color Swatches & Submit */}
-      <div className="flex items-center justify-between border-t border-[#EBE7E0]/80 px-3 sm:px-4 py-2.5 bg-white/40">
-        
-        {/* Subtle Stationery Color Swatches */}
-        <div className="flex items-center gap-1.5" title="Note paper color">
+      <div className="flex items-center justify-between border-t border-[#EBE7E0]/80 px-3 sm:px-4 py-2.5 bg-white/40 gap-3">
+
+        {/* Subtle Stationery Color Swatches (larger touch targets on mobile) */}
+        <div className="flex items-center gap-2 sm:gap-1.5" title="Note paper color">
           {(Object.keys(NOTE_COLOR_MAP) as NoteColor[]).map((cKey) => {
             const config = NOTE_COLOR_MAP[cKey];
             const isSelected = selectedColor === cKey;
@@ -678,9 +671,8 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                 onClick={() => setSelectedColor(cKey)}
                 aria-label={config.label}
                 title={config.label}
-                className={`w-5 h-5 rounded-full border transition-all ${config.border} ${
-                  isSelected ? 'scale-125 ring-2 ring-[#1A1815]/30 shadow-sm' : 'hover:scale-110 opacity-80'
-                }`}
+                className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all touch-manipulation ${config.border} ${isSelected ? 'scale-125 ring-2 ring-[#1A1815]/30 shadow-sm' : 'hover:scale-110 opacity-80'
+                  }`}
                 style={{ backgroundColor: config.swatch }}
               />
             );
@@ -688,7 +680,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         </div>
 
         {/* Submit Button & Shortcut hint */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-[11px] font-mono text-[#8C8476] hidden md:inline">
             Ctrl + Enter
           </span>
@@ -696,10 +688,10 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             type="button"
             disabled={isSubmitting || !canSubmit}
             onClick={() => handleSubmit()}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1A1815] hover:bg-[#2F2B26] text-white text-xs font-medium shadow-paper disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-[#1A1815] hover:bg-[#2F2B26] text-white text-xs font-medium shadow-paper disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 min-h-[36px]"
           >
-            <Send className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isSubmitting ? 'Syncing...' : 'Add Sticky Note'}</span>
+            <Send className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="whitespace-nowrap">{isSubmitting ? 'Syncing...' : 'Add Note'}</span>
           </button>
         </div>
 

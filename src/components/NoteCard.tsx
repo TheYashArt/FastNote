@@ -186,15 +186,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             </span>
           </div>
 
-          {/* Right: Edit, Pin & Delete actions */}
-          <div className="flex items-center gap-0.5">
+          {/* Right: Edit, Pin & Delete actions (accessible on mobile without hover) */}
+          <div className="flex items-center gap-1 sm:gap-0.5">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(note);
               }}
-              className="p-1 rounded text-[#8C8476] opacity-0 group-hover:opacity-100 hover:text-[#1A1815] hover:bg-black/5 transition-all"
+              className="p-1.5 sm:p-1 rounded text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-[#1A1815] hover:bg-black/5 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90"
               title="Open and edit note"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -206,10 +206,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 e.stopPropagation();
                 onTogglePin(note.id, note.pinned);
               }}
-              className={`p-1 rounded transition-colors ${
+              className={`p-1.5 sm:p-1 rounded transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90 ${
                 note.pinned
                   ? 'text-amber-700 hover:text-amber-800'
-                  : 'text-[#8C8476] opacity-0 group-hover:opacity-100 hover:text-[#1A1815]'
+                  : 'text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-[#1A1815]'
               }`}
               title={note.pinned ? 'Unpin note' : 'Pin note to top'}
             >
@@ -222,7 +222,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 e.stopPropagation();
                 onDelete(note.id);
               }}
-              className="p-1 rounded text-[#8C8476] opacity-0 group-hover:opacity-100 hover:text-rose-700 hover:bg-rose-50 transition-all"
+              className="p-1.5 sm:p-1 rounded text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-rose-700 hover:bg-rose-50 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90"
               title="Delete note"
             >
               <Trash2 className="w-3.5 h-3.5" />

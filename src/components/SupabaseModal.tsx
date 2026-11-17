@@ -177,7 +177,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://xyzcompany.supabase.co"
-                  className="w-full px-3 py-2 rounded-lg border border-[#DDD7CD] text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono focus:border-[#8C8476]"
+                  className="w-full px-3 py-2 rounded-lg border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono focus:border-[#8C8476]"
                 />
               </div>
 
@@ -191,7 +191,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   value={anonKey}
                   onChange={(e) => setAnonKey(e.target.value)}
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  className="w-full px-3 py-2 rounded-lg border border-[#DDD7CD] text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono focus:border-[#8C8476]"
+                  className="w-full px-3 py-2 rounded-lg border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono focus:border-[#8C8476]"
                 />
                 <p className="text-[11px] text-[#8C8476]">
                   Found under Project Settings &rarr; API &rarr; Project API keys (`anon` / `public`).

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Copy, Check, Smartphone, ArrowRight, RefreshCw } from 'lucide-react';
+import { X, Copy, Check, Smartphone, ArrowRight, RefreshCw, Share2 } from 'lucide-react';
 import { generateRoomId } from '../lib/utils';
 
 interface QrModalProps {
@@ -25,10 +25,28 @@ export const QrModal: React.FC<QrModalProps> = ({
     ? `${window.location.origin}${window.location.pathname}?room=${roomId}`
     : `https://fastnote.app?room=${roomId}`;
 
+  const hasNativeShare = typeof navigator !== 'undefined' && Boolean(navigator.share);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(currentUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FastNote Live Sync',
+          text: `Join my FastNote channel #${roomId} to pass notes and files`,
+          url: currentUrl,
+        });
+      } catch {
+        // User cancelled or share dismissed
+      }
+    } else {
+      handleCopy();
+    }
   };
 
   const handleSwitchRoom = (e: React.FormEvent) => {
@@ -46,45 +64,45 @@ export const QrModal: React.FC<QrModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-sm rounded-2xl bg-white border border-[#DDD7CD] shadow-elevated p-6 relative overflow-hidden"
+        className="w-full max-w-sm rounded-2xl bg-white border border-[#DDD7CD] shadow-elevated p-5 sm:p-6 relative overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+          className="absolute right-3.5 top-3.5 p-2 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="text-center mb-5">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/60 mx-auto flex items-center justify-center mb-2.5">
+        <div className="text-center mb-4 sm:mb-5">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/60 mx-auto flex items-center justify-center mb-2">
             <Smartphone className="w-5 h-5" />
           </div>
           <h2 className="text-base font-semibold text-[#1A1815] tracking-tight">
             Connect Phone or Device
           </h2>
-          <p className="text-xs text-[#8C8476] mt-1 max-w-[240px] mx-auto">
-            Scan with your phone camera to instantly access and sync notes on this board.
+          <p className="text-xs text-[#8C8476] mt-1 max-w-[250px] mx-auto leading-relaxed">
+            Scan with your phone camera or share link to sync notes across devices.
           </p>
         </div>
 
         {/* QR Code Container */}
-        <div className="bg-[#FAF9F7] border border-[#EBE7E0] rounded-xl p-4 flex flex-col items-center justify-center mb-4">
+        <div className="bg-[#FAF9F7] border border-[#EBE7E0] rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center mb-3">
           <div className="p-2 bg-white rounded-lg shadow-paper">
             <QRCodeSVG
               value={currentUrl}
-              size={180}
+              size={170}
               level="M"
               fgColor="#1A1815"
               bgColor="#FFFFFF"
             />
           </div>
-          <div className="mt-3 flex items-center gap-1.5 font-mono text-xs text-[#4D473E]">
+          <div className="mt-2.5 flex items-center gap-1.5 font-mono text-xs text-[#4D473E]">
             <span className="text-[#8C8476]">Sync Code:</span>
             <span className="font-semibold text-[#1A1815] bg-white px-2 py-0.5 rounded border border-[#DDD7CD]">
               #{roomId}
@@ -92,15 +110,32 @@ export const QrModal: React.FC<QrModalProps> = ({
           </div>
         </div>
 
-        {/* Copy Link Button */}
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#1A1815] text-[#FAF9F7] text-xs font-medium hover:bg-[#2F2B26] transition-colors mb-3 active:scale-98"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          <span>{copied ? 'Link Copied to Clipboard!' : 'Copy Sync Link'}</span>
-        </button>
+        {/* Action Buttons: Native Share (on mobile) & Copy Link */}
+        <div className="space-y-2 mb-3">
+          {hasNativeShare && (
+            <button
+              type="button"
+              onClick={handleShare}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-[#1A1815] text-[#FAF9F7] text-xs font-medium hover:bg-[#2F2B26] transition-colors min-h-[40px] active:scale-98"
+            >
+              <Share2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Share via Phone / Apps</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-medium transition-colors min-h-[40px] active:scale-98 ${
+              hasNativeShare 
+                ? 'bg-[#F4F2EE] text-[#1A1815] hover:bg-[#EBE7E0]' 
+                : 'bg-[#1A1815] text-[#FAF9F7] hover:bg-[#2F2B26]'
+            }`}
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Link Copied to Clipboard!' : 'Copy Sync Link'}</span>
+          </button>
+        </div>
 
         {/* Switch / Change Room */}
         <div className="pt-3 border-t border-[#EBE7E0] space-y-2">
@@ -109,7 +144,7 @@ export const QrModal: React.FC<QrModalProps> = ({
             <button
               type="button"
               onClick={handleGenerateNew}
-              className="hover:text-[#1A1815] flex items-center gap-1 text-[11px]"
+              className="hover:text-[#1A1815] flex items-center gap-1 text-[11px] py-1"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Random code</span>
@@ -121,12 +156,12 @@ export const QrModal: React.FC<QrModalProps> = ({
               value={customRoom}
               onChange={(e) => setCustomRoom(e.target.value)}
               placeholder="e.g. mobile-notes"
-              className="flex-1 px-2.5 py-1.5 rounded-lg border border-[#DDD7CD] text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono"
+              className="flex-1 px-3 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono min-h-[38px] sm:min-h-0"
             />
             <button
               type="submit"
               disabled={!customRoom.trim()}
-              className="px-3 py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#1A1815] text-xs font-medium text-[#1A1815] disabled:opacity-40 transition-colors"
+              className="px-3.5 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#1A1815] text-xs font-medium text-[#1A1815] disabled:opacity-40 transition-colors min-h-[38px] sm:min-h-0 flex items-center justify-center"
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>

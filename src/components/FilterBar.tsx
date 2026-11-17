@@ -33,10 +33,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <button
           type="button"
           onClick={() => onFilterChange('all')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'all'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
-              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2]'
+              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -52,10 +52,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <button
           type="button"
           onClick={() => onFilterChange('image')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'image'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
-              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2]'
+              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
           }`}
         >
           <ImageIcon className="w-3.5 h-3.5" />
@@ -73,10 +73,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <button
           type="button"
           onClick={() => onFilterChange('pdf')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'pdf'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
-              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2]'
+              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
           }`}
         >
           <FileCheck className="w-3.5 h-3.5" />
@@ -95,10 +95,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <button
             type="button"
             onClick={() => onFilterChange('pinned')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
               currentFilter === 'pinned'
                 ? 'bg-amber-800 text-amber-100 shadow-sm'
-                : 'bg-white border border-[#DDD7CD] text-amber-800 hover:border-amber-400'
+                : 'bg-white border border-[#DDD7CD] text-amber-800 hover:border-amber-400 active:bg-[#F4F2EE]'
             }`}
           >
             <Pin className="w-3.5 h-3.5 fill-amber-700" />
@@ -118,13 +118,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Filter notes..."
-          className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-white border border-[#DDD7CD] text-xs text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] transition-colors shadow-paper"
+          className="w-full pl-8 pr-8 py-2 sm:py-1.5 rounded-lg bg-white border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] transition-colors shadow-paper min-h-[36px]"
         />
         {searchQuery && (
           <button
             type="button"
             onClick={() => onSearchChange('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8476] hover:text-[#1A1815]"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8C8476] hover:text-[#1A1815] p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
+            title="Clear search"
           >
             <X className="w-3.5 h-3.5" />
           </button>
