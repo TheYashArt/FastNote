@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Download, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ImageLightboxProps {
   imageUrl: string | null;
@@ -27,11 +28,19 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
   if (!imageUrl) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.92 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
         className="relative max-w-4xl max-h-[90vh] flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
@@ -42,34 +51,40 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
           </p>
 
           <div className="flex items-center gap-2">
-            <a
+            <motion.a
               href={imageUrl}
               download="fastnote-image.png"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors text-xs flex items-center gap-1.5"
               title="Download image"
             >
               <Download className="w-4 h-4" />
               <span className="text-xs">Download</span>
-            </a>
+            </motion.a>
 
-            <a
+            <motion.a
               href={imageUrl}
               target="_blank"
               rel="noreferrer"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
               title="Open full size in new tab"
             >
               <ExternalLink className="w-4 h-4" />
-            </a>
+            </motion.a>
 
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={onClose}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors ml-1"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -81,7 +96,7 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
             className="max-h-[80vh] max-w-full object-contain"
           />
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { DragEvent } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Link2,
   Image as ImageIcon,
@@ -34,9 +35,10 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
   const [selectedColor, setSelectedColor] = useState<NoteColor>('linen');
   const [isPinned, setIsPinned] = useState(false);
 
-  // Multi-attachment states
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const attachMenuRef = useRef<HTMLDivElement>(null);
 
   // Multiple Images & Multiple PDFs & Multiple MDs
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
@@ -61,6 +63,19 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       });
     };
   }, [imageItems]);
+
+  // Close attachment dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target as Node)) {
+        setShowAttachMenu(false);
+      }
+    };
+    if (showAttachMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAttachMenu]);
 
   const showTemporaryNotice = (msg: string) => {
     setLimitNotice(msg);
@@ -384,117 +399,154 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         }`}
     >
       {/* Top Composer Header: Quick actions & Pin toggle */}
-      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2 bg-white/50 gap-2">
+      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2 bg-white/50 gap-2 relative">
 
-        {/* Attachment Adders with live limit counts (scrollable on narrow mobile) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 min-w-0">
-          <span className="text-[11px] font-medium text-[#8C8476] mr-0.5 hidden sm:inline shrink-0">Attach:</span>
-
-          {/* Link button */}
-          <button
+        {/* Attachment Adders Menu via Plus Button */}
+        <div className="relative" ref={attachMenuRef}>
+          <motion.button
             type="button"
-            onClick={() => setShowLinkInput(!showLinkInput)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${showLinkInput || linkUrl.trim()
-              ? 'bg-[#1A1815] text-white shadow-xs'
-              : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
-              }`}
-            title="Attach a URL link"
-          >
-            <Link2 className="w-3.5 h-3.5" />
-            <span>Link</span>
-            {linkUrl.trim() && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-          </button>
-
-          {/* Multiple Images button (with counter e.g. 2/5) */}
-          <button
-            type="button"
-            disabled={isImageLimitReached}
-            onClick={() => imageInputRef.current?.click()}
-            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isImageLimitReached
-              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
-              : imageItems.length > 0
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => setShowAttachMenu((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
+              showAttachMenu || showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0 || mdFiles.length > 0
                 ? 'bg-[#1A1815] text-white shadow-xs'
                 : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
-              }`}
-            title={
-              isImageLimitReached
-                ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE} images max`
-                : `Attach images (${imageItems.length}/${ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE})`
-            }
+            }`}
+            title="Attach file, link, or media"
           >
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>Images</span>
-            <span className={`text-[10px] font-mono ${imageItems.length > 0 ? 'text-amber-300 font-bold' : 'text-[#8C8476]'}`}>
-              {imageItems.length}/{ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
-            </span>
-          </button>
+            <Plus className={`w-3.5 h-3.5 transition-transform duration-150 ${showAttachMenu ? 'rotate-45' : ''}`} />
+            <span>Attach</span>
+            {(linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0 || mdFiles.length > 0) && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            )}
+          </motion.button>
 
-          {/* Multiple PDFs button (with counter e.g. 1/3) */}
-          <button
-            type="button"
-            disabled={isPdfLimitReached}
-            onClick={() => pdfInputRef.current?.click()}
-            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isPdfLimitReached
-              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
-              : pdfFiles.length > 0
-                ? 'bg-[#1A1815] text-white shadow-xs'
-                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
-              }`}
-            title={
-              isPdfLimitReached
-                ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE} PDFs max`
-                : `Attach PDFs (${pdfFiles.length}/${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE})`
-            }
-          >
-            <FileCheck className="w-3.5 h-3.5" />
-            <span>PDFs</span>
-            <span className={`text-[10px] font-mono ${pdfFiles.length > 0 ? 'text-amber-300 font-bold' : 'text-[#8C8476]'}`}>
-              {pdfFiles.length}/{ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
-            </span>
-          </button>
+          {/* Attachment Options Dialogue Box / Dropdown */}
+          <AnimatePresence>
+            {showAttachMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                transition={{ duration: 0.14, ease: 'easeOut' }}
+                className="absolute left-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
+              >
+                {/* Link Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLinkInput(true);
+                    setShowAttachMenu(false);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-[#8C8476]" />
+                    <span>Attach Link</span>
+                  </div>
+                  {linkUrl.trim() && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                </button>
 
-          {/* Multiple MD files button (with counter e.g. 0/3) */}
-          <button
-            type="button"
-            disabled={isMdLimitReached}
-            onClick={() => mdInputRef.current?.click()}
-            className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isMdLimitReached
-              ? 'text-[#8C8476] bg-[#F4F2EE] opacity-60 cursor-not-allowed'
-              : mdFiles.length > 0
-                ? 'bg-[#1A1815] text-white shadow-xs'
-                : 'text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] active:bg-[#E2DED6]'
-              }`}
-            title={
-              isMdLimitReached
-                ? `Limit reached: ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} .md files max`
-                : `Attach Markdown files (${mdFiles.length}/${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})`
-            }
-          >
-            <FileCode className="w-3.5 h-3.5" />
-            <span>.MD</span>
-            <span className={`text-[10px] font-mono ${mdFiles.length > 0 ? 'text-amber-300 font-bold' : 'text-[#8C8476]'}`}>
-              {mdFiles.length}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
-            </span>
-          </button>
+                {/* Images Option */}
+                <button
+                  type="button"
+                  disabled={isImageLimitReached}
+                  onClick={() => {
+                    imageInputRef.current?.click();
+                    setShowAttachMenu(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    isImageLimitReached
+                      ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                      : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#8C8476]" />
+                    <span>Images</span>
+                  </div>
+                  <span className={`text-[10px] font-mono ${imageItems.length > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                    {imageItems.length}/{ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
+                  </span>
+                </button>
 
-          {/* Google Drive Backup Link */}
-          <a
-            href="https://drive.google.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setShowLinkInput(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] hover:text-[#1A1815] transition-colors shrink-0 min-h-[32px] sm:min-h-0"
-            title="Backup plan: Upload larger or multiple files to Google Drive and paste the link here"
-          >
-            <HardDrive className="w-3.5 h-3.5 text-amber-700" />
-            <span className="whitespace-nowrap">Drive</span>
-            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-          </a>
+                {/* PDFs Option */}
+                <button
+                  type="button"
+                  disabled={isPdfLimitReached}
+                  onClick={() => {
+                    pdfInputRef.current?.click();
+                    setShowAttachMenu(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    isPdfLimitReached
+                      ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                      : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="w-4 h-4 text-[#8C8476]" />
+                    <span>PDF Documents</span>
+                  </div>
+                  <span className={`text-[10px] font-mono ${pdfFiles.length > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                    {pdfFiles.length}/{ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
+                  </span>
+                </button>
+
+                {/* Markdown Option */}
+                <button
+                  type="button"
+                  disabled={isMdLimitReached}
+                  onClick={() => {
+                    mdInputRef.current?.click();
+                    setShowAttachMenu(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    isMdLimitReached
+                      ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                      : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileCode className="w-4 h-4 text-[#8C8476]" />
+                    <span>Markdown (.md)</span>
+                  </div>
+                  <span className={`text-[10px] font-mono ${mdFiles.length > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                    {mdFiles.length}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+                  </span>
+                </button>
+
+                {/* Divider */}
+                <div className="h-px bg-[#EBE7E0] my-1" />
+
+                {/* Google Drive Option */}
+                <a
+                  href="https://drive.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    setShowLinkInput(true);
+                    setShowAttachMenu(false);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-amber-700" />
+                    <span>Google Drive (Backup)</span>
+                  </div>
+                  <ExternalLink className="w-3 h-3 text-[#8C8476]" />
+                </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Pin to top button */}
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => setIsPinned(!isPinned)}
           className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${isPinned
             ? 'bg-amber-100 text-amber-800 font-medium'
@@ -504,7 +556,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
         >
           <Pin className={`w-3.5 h-3.5 ${isPinned ? 'fill-amber-700 text-amber-700' : ''}`} />
           <span className="hidden sm:inline">{isPinned ? 'Pinned' : 'Pin'}</span>
-        </button>
+        </motion.button>
       </div>
 
       {/* Hidden File Inputs (enforced via accept & multiple) */}
@@ -543,23 +595,30 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       />
 
       {/* Limit Notice banner if user exceeded cap */}
-      {limitNotice && (
-        <div className="px-4 py-2 bg-amber-50/95 border-b border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-150">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span className="truncate">{limitNotice}</span>
-          </div>
-          <a
-            href="https://drive.google.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setShowLinkInput(true)}
-            className="shrink-0 flex items-center gap-1 font-semibold text-amber-900 underline hover:text-amber-950 text-[11px]"
+      <AnimatePresence>
+        {limitNotice && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 bg-amber-50/95 border-b border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 overflow-hidden"
           >
-            <span>Upload to Drive ↗</span>
-          </a>
-        </div>
-      )}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span className="truncate">{limitNotice}</span>
+            </div>
+            <a
+              href="https://drive.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setShowLinkInput(true)}
+              className="shrink-0 flex items-center gap-1 font-semibold text-amber-900 underline hover:text-amber-950 text-[11px]"
+            >
+              <span>Upload to Drive ↗</span>
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Composer Content Area */}
       <div className="p-3 sm:p-4 space-y-3">
@@ -586,9 +645,16 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
           />
         </div>
 
-        {/* Active Attachments Drawer */}
-        {(showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0 || mdFiles.length > 0) && (
-          <div className="pt-2 border-t border-[#EBE7E0]/70 space-y-2.5 animate-in fade-in duration-150">
+        {/* Active Attachments Drawer with AnimatePresence */}
+        <AnimatePresence>
+          {(showLinkInput || linkUrl.trim() || imageItems.length > 0 || pdfFiles.length > 0 || mdFiles.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="pt-2 border-t border-[#EBE7E0]/70 space-y-2.5 overflow-hidden"
+            >
 
             {/* Google Drive Backup Guidance Strip */}
             <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-black/[0.02] border border-[#DDD7CD]/70 text-[11px] text-[#6E675F] gap-2">
@@ -793,8 +859,9 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
               </div>
             )}
 
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
       </div>
 
@@ -807,13 +874,15 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
             const config = NOTE_COLOR_MAP[cKey];
             const isSelected = selectedColor === cKey;
             return (
-              <button
+              <motion.button
                 key={cKey}
                 type="button"
+                whileHover={{ scale: 1.25 }}
+                whileTap={{ scale: 0.88 }}
                 onClick={() => setSelectedColor(cKey)}
                 aria-label={config.label}
                 title={config.label}
-                className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all touch-manipulation ${config.border} ${isSelected ? 'scale-125 ring-2 ring-[#1A1815]/30 shadow-sm' : 'hover:scale-110 opacity-80'
+                className={`w-6 h-6 sm:w-5 sm:h-5 rounded-full border transition-all touch-manipulation ${config.border} ${isSelected ? 'scale-125 ring-2 ring-[#1A1815]/30 shadow-sm' : 'opacity-80'
                   }`}
                 style={{ backgroundColor: config.swatch }}
               />
@@ -826,15 +895,17 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
           <span className="text-[11px] font-mono text-[#8C8476] hidden md:inline">
             Ctrl + Enter
           </span>
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
             disabled={isSubmitting || !canSubmit}
             onClick={() => handleSubmit()}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-[#1A1815] hover:bg-[#2F2B26] text-white text-xs font-medium shadow-paper disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 min-h-[36px]"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-[#1A1815] hover:bg-[#2F2B26] text-white text-xs font-medium shadow-paper disabled:opacity-40 disabled:cursor-not-allowed transition-all min-h-[36px]"
           >
             <Send className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="whitespace-nowrap">{isSubmitting ? 'Syncing...' : 'Add Note'}</span>
-          </button>
+          </motion.button>
         </div>
 
       </div>

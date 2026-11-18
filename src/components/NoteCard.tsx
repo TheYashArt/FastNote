@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Pin, 
   Copy, 
@@ -124,9 +125,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   };
 
   return (
-    <article
+    <motion.article
+      layout
+      initial={{ opacity: 0, scale: 0.94, y: 15 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 10 }}
+      whileHover={{ y: -3, transition: { duration: 0.18, ease: 'easeOut' } }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => onEdit(note)}
-      className={`group relative rounded-xl border p-3 sm:p-4 transition-all duration-200 shadow-paper hover:shadow-paper-hover flex flex-col justify-between cursor-pointer overflow-hidden h-[280px] sm:h-[350px] ${
+      className={`group relative rounded-xl border p-3 sm:p-4 transition-colors duration-150 shadow-paper hover:shadow-paper-hover flex flex-col justify-between cursor-pointer overflow-hidden h-[280px] sm:h-[350px] ${
         colorConfig.bg
       } ${colorConfig.border} ${
         note.pinned ? 'ring-1 ring-amber-500/30' : ''
@@ -223,13 +231,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               <Pencil className="w-3.5 h-3.5" />
             </button> */}
 
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onTogglePin(note.id, note.pinned);
               }}
-              className={`p-1.5 sm:p-1 rounded transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90 ${
+              className={`p-1.5 sm:p-1 rounded transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center ${
                 note.pinned
                   ? 'text-amber-700 hover:text-amber-800'
                   : 'text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-[#1A1815]'
@@ -237,7 +247,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               title={note.pinned ? 'Unpin note' : 'Pin note to top'}
             >
               <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-amber-600' : ''}`} />
-            </button>
+            </motion.button>
 
             {/* <button
               type="button"
@@ -468,8 +478,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       {/* 3. Card Footer (Uniformly pinned at bottom) */}
       <div className="shrink-0 pt-1.5 sm:pt-2 border-t border-[#EBE7E0]/60 flex items-center justify-between text-xs text-[#8C8476]">
         <div className="flex items-center gap-1 sm:gap-1.5">
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.92 }}
             onClick={handleCopyAll}
             className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded transition-colors text-xs font-medium ${
               isCopied
@@ -480,7 +492,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           >
             {isCopied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <motion.span initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                </motion.span>
                 <span className="hidden xs:inline">Copied!</span>
               </>
             ) : (
@@ -489,10 +503,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <span className="hidden xs:inline">Copy</span>
               </>
             )}
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.92 }}
             onClick={(e) => {
               e.stopPropagation();
               onEdit(note);
@@ -502,26 +518,33 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           >
             <Pencil className="w-3 h-3" />
             <span className="hidden xs:inline">Edit</span>
-          </button>
-          <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(note.id);
-              }}
-              className="p-1.5 sm:p-1 rounded text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-rose-700 hover:bg-rose-50 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center active:scale-90"
-              title="Delete note"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+          </motion.button>
+          
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.85 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(note.id);
+            }}
+            className="p-1.5 sm:p-1 rounded text-[#8C8476] opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100 hover:text-rose-700 hover:bg-rose-50 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center"
+            title="Delete note"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </motion.button>
         </div>
 
         {note.pinned && (
-          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+          <motion.span 
+            initial={{ scale: 0.8, opacity: 0 }} 
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50"
+          >
             Pinned
-          </span>
+          </motion.span>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 };

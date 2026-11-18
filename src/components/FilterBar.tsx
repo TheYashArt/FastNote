@@ -1,5 +1,7 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Search, X, Pin, Image as ImageIcon, FileCheck, Layers, FileCode } from 'lucide-react';
+import { CustomCalendarFilter } from './CustomCalendarFilter';
 
 export type FilterOption = 'all' | 'image' | 'pdf' | 'md' | 'pinned';
 
@@ -8,6 +10,9 @@ interface FilterBarProps {
   onFilterChange: (filter: FilterOption) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  selectedDate: string | null;
+  onSelectDate: (date: string | null) => void;
+  noteDates?: Set<string>;
   counts: {
     all: number;
     image: number;
@@ -22,19 +27,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onFilterChange,
   searchQuery,
   onSearchChange,
+  selectedDate,
+  onSelectDate,
+  noteDates,
   counts,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 my-6">
+    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3 mb-4 sm:mb-5">
       
-      {/* 4 Filters: All, Images, PDFs, and Pinned (if any) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-        
-        {/* 1. All */}
-        <button
+      {/* 1. Category / Media Filters (Scrollable strip) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar min-w-0">
+        {/* All */}
+        <motion.button
           type="button"
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => onFilterChange('all')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'all'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
               : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
@@ -47,13 +56,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           }`}>
             {counts.all}
           </span>
-        </button>
+        </motion.button>
 
-        {/* 2. Images */}
-        <button
+        {/* Images */}
+        <motion.button
           type="button"
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => onFilterChange('image')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'image'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
               : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
@@ -68,13 +79,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {counts.image}
             </span>
           )}
-        </button>
+        </motion.button>
 
-        {/* 3. PDFs */}
-        <button
+        {/* PDFs */}
+        <motion.button
           type="button"
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => onFilterChange('pdf')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'pdf'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
               : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
@@ -89,13 +102,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {counts.pdf}
             </span>
           )}
-        </button>
+        </motion.button>
 
-        {/* 4. MDs */}
-        <button
+        {/* MDs */}
+        <motion.button
           type="button"
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.94 }}
           onClick={() => onFilterChange('md')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
             currentFilter === 'md'
               ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
               : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
@@ -110,14 +125,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {counts.md}
             </span>
           )}
-        </button>
+        </motion.button>
 
-        {/* 4. Pinned (if any exist or currently active) */}
+        {/* Pinned (if any exist or currently active) */}
         {(counts.pinned > 0 || currentFilter === 'pinned') && (
-          <button
+          <motion.button
             type="button"
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => onFilterChange('pinned')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 min-h-[34px] sm:min-h-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
               currentFilter === 'pinned'
                 ? 'bg-amber-800 text-amber-100 shadow-sm'
                 : 'bg-white border border-[#DDD7CD] text-amber-800 hover:border-amber-400 active:bg-[#F4F2EE]'
@@ -128,30 +145,40 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <span className="text-[10px] font-mono px-1 rounded bg-amber-100 text-amber-900">
               {counts.pinned}
             </span>
-          </button>
+          </motion.button>
         )}
       </div>
 
-      {/* Search Bar */}
-      <div className="relative min-w-[200px] sm:w-64">
-        <Search className="w-3.5 h-3.5 text-[#8C8476] absolute left-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Filter notes..."
-          className="w-full pl-8 pr-8 py-2 sm:py-1.5 rounded-lg bg-white border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] transition-colors shadow-paper min-h-[36px]"
+      {/* 2. Right Controls: Standalone Calendar Filter & Search (NOT clipped by overflow-x) */}
+      <div className="flex items-center gap-2 shrink-0 justify-between md:justify-end">
+        {/* Custom Calendar Filter with unclipped floating box */}
+        <CustomCalendarFilter
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          noteDates={noteDates}
         />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => onSearchChange('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8C8476] hover:text-[#1A1815] p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
-            title="Clear search"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
+
+        {/* Search Bar */}
+        <div className="relative flex-1 sm:flex-initial sm:w-56 min-w-[150px]">
+          <Search className="w-3.5 h-3.5 text-[#8C8476] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search notes..."
+            className="w-full pl-8 pr-8 py-2 sm:py-1.5 rounded-lg bg-white border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] transition-colors shadow-paper min-h-[34px]"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8C8476] hover:text-[#1A1815] p-1 rounded min-w-[24px] min-h-[24px] flex items-center justify-center"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
     </div>

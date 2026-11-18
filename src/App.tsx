@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Composer } from './components/Composer';
 import { NoteCard } from './components/NoteCard';
@@ -47,6 +48,7 @@ export function App() {
   // UI Controls
   const [filter, setFilter] = useState<FilterOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title?: string } | null>(null);
@@ -177,6 +179,21 @@ export function App() {
     }
   };
 
+  // Set of dates (YYYY-MM-DD) that have notes
+  const noteDates = useMemo(() => {
+    const dates = new Set<string>();
+    notes.forEach((n) => {
+      if (n.created_at) {
+        const d = new Date(n.created_at);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dates.add(`${y}-${m}-${day}`);
+      }
+    });
+    return dates;
+  }, [notes]);
+
   // Counts for filters: All, Images, PDFs, .MDs, Pinned
   const counts = useMemo(() => {
     return {
@@ -228,6 +245,17 @@ export function App() {
           if (!hasMd) return false;
         }
 
+        // Date filter
+        if (selectedDate) {
+          if (!note.created_at) return false;
+          const noteDate = new Date(note.created_at);
+          const y = noteDate.getFullYear();
+          const m = String(noteDate.getMonth() + 1).padStart(2, '0');
+          const d = String(noteDate.getDate()).padStart(2, '0');
+          const noteDateStr = `${y}-${m}-${d}`;
+          if (noteDateStr !== selectedDate) return false;
+        }
+
         // Search query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
@@ -249,7 +277,7 @@ export function App() {
         if (!a.pinned && b.pinned) return 1;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-  }, [notes, filter, searchQuery]);
+  }, [notes, filter, searchQuery, selectedDate]);
 
   return (
     <div className="min-h-screen bg-[#F9F8F6] text-[#1A1815] flex flex-col paper-grid">
@@ -263,165 +291,195 @@ export function App() {
         totalNotes={notes.length}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        
-        {/* Intro banner on quick pass (compact & two-column layout on mobile) */}
-        <section className="mb-4 sm:mb-6">
-          <div className="flex items-center justify-between gap-3 pb-2 sm:pb-2.5 border-b border-[#EBE7E0]">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-base sm:text-2xl font-bold tracking-tight text-[#1A1815] truncate sm:whitespace-normal">
-                Device Clipboard & Sticky Notes
-              </h1>
-              <p className="text-[11px] sm:text-xs text-[#8C8476] mt-0.5 leading-tight sm:leading-relaxed truncate sm:whitespace-normal">
-                Pass text, links, screenshots, and PDFs across devices instantly.
-              </p>
-            </div>
-
-            <div className="shrink-0 flex items-center">
-              <button
-                type="button"
-                onClick={() => setIsQrModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors min-h-[32px] sm:min-h-0 active:scale-95 shadow-2xs whitespace-nowrap"
-              >
-                <Smartphone className="w-3.5 h-3.5 text-[#8C8476]" />
-                <span className="hidden xs:inline">Pair Devices</span>
-                <span className="xs:hidden">Pair</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Note Composer */}
-        <section className="mb-6 sm:mb-8">
-          <Composer onAddNote={handleAddNote} isSubmitting={isSubmitting} />
-        </section>
-
-        {/* Filter and Search Bar */}
-        <FilterBar
-          currentFilter={filter}
-          onFilterChange={setFilter}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          counts={counts}
-        />
-
-        {/* Notes Grid — Equal note size for all notes (2-column on mobile, 3-column on lg) */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 items-stretch">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-[280px] sm:h-[350px] rounded-xl border border-[#EBE7E0] bg-white/60 p-3 sm:p-4 animate-pulse flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="w-12 sm:w-16 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
-                    <div className="w-8 sm:w-10 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
-                  </div>
-                  <div className="w-3/4 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
-                  <div className="space-y-1.5">
-                    <div className="w-full h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
-                    <div className="w-5/6 h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
-                  </div>
-                </div>
-                <div className="w-16 sm:w-20 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+      {/* Main Content Area - Split Screen on Desktop (Input Left, Notes Right), Full Width */}
+      <main className="flex-1 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8">
+          
+          {/* Left Column: Fixed / Sticky Composer Sidebar */}
+          <aside className="w-full lg:w-[380px] xl:w-[420px] 2xl:w-[460px] shrink-0 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1 no-scrollbar space-y-4">
+            {/* Quick intro banner & Device Pairing */}
+            <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-[#EBE7E0]">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-[#1A1815] truncate">
+                  New Sticky Note
+                </h1>
+                <p className="text-[11px] text-[#8C8476] mt-0.5 leading-tight truncate">
+                  Sync text, links, screenshots, PDFs, & MD
+                </p>
               </div>
-            ))}
-          </div>
-        ) : filteredNotes.length === 0 ? (
-          <EmptyState
-            filter={filter}
-            searchQuery={searchQuery}
-            onClearFilters={() => {
-              setFilter('all');
-              setSearchQuery('');
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 items-stretch">
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onEdit={(n) => setEditingNote(n)}
-                onDelete={handleDeleteNote}
-                onTogglePin={handleTogglePin}
-                onOpenImageLightbox={(url, title) =>
-                  setLightboxImage({ url, title })
-                }
-              />
-            ))}
-          </div>
-        )}
 
+              <div className="shrink-0 flex items-center">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-[#4D473E] bg-[#F4F2EE] hover:bg-[#EBE7E0] transition-colors min-h-[30px] shadow-2xs whitespace-nowrap"
+                  title="Scan QR Code to open on mobile"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-[#8C8476]" />
+                  <span className="hidden xs:inline">Pair Mobile</span>
+                  <span className="xs:hidden">Pair</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Note Composer */}
+            <Composer onAddNote={handleAddNote} isSubmitting={isSubmitting} />
+
+            {/* Helpful Quick Tip on Desktop */}
+            <div className="hidden lg:flex items-center justify-between px-3 py-2 rounded-lg bg-black/[0.02] border border-[#EBE7E0] text-[11px] text-[#8C8476]">
+              <span>Tip: Paste anything with <kbd className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#DDD7CD] text-[#1A1815]">Ctrl+V</kbd></span>
+              <span className="font-mono text-[10px]">#{roomId}</span>
+            </div>
+          </aside>
+
+          {/* Right Column: Dynamic Notes Board */}
+          <section className="flex-1 min-w-0 w-full space-y-4">
+            {/* Filter and Search Bar */}
+            <FilterBar
+              currentFilter={filter}
+              onFilterChange={setFilter}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              noteDates={noteDates}
+              counts={counts}
+            />
+
+            {/* Notes Grid — Responsive full-width grid (2-col mobile, up to 4-col on ultra-wide) */}
+            {isLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="h-[280px] sm:h-[350px] rounded-xl border border-[#EBE7E0] bg-white/60 p-3 sm:p-4 animate-pulse flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="w-12 sm:w-16 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+                        <div className="w-8 sm:w-10 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+                      </div>
+                      <div className="w-3/4 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+                      <div className="space-y-1.5">
+                        <div className="w-full h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
+                        <div className="w-5/6 h-2.5 sm:h-3 bg-[#F4F2EE] rounded" />
+                      </div>
+                    </div>
+                    <div className="w-16 sm:w-20 h-3.5 sm:h-4 bg-[#F4F2EE] rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredNotes.length === 0 ? (
+              <EmptyState
+                filter={filter}
+                searchQuery={searchQuery}
+                selectedDate={selectedDate}
+                onClearFilters={() => {
+                  setFilter('all');
+                  setSearchQuery('');
+                  setSelectedDate(null);
+                }}
+              />
+            ) : (
+              <motion.div layout className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 items-stretch">
+                <AnimatePresence mode="popLayout">
+                  {filteredNotes.map((note) => (
+                    <NoteCard
+                      key={note.id}
+                      note={note}
+                      onEdit={(n) => setEditingNote(n)}
+                      onDelete={handleDeleteNote}
+                      onTogglePin={handleTogglePin}
+                      onOpenImageLightbox={(url, title) =>
+                        setLightboxImage({ url, title })
+                      }
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </section>
+
+        </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-[#EBE7E0] bg-[#FAF9F7]/90 py-6 text-xs text-[#8C8476] mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-[#1A1815]">FastNote</span>
             <span>&bull;</span>
             <span>Zero-login quick device drop</span>
-            {/* <span>&bull;</span> */}
-            {/* <button
-              type="button"
-              onClick={() => setIsSupabaseModalOpen(true)}
-              className="text-[#B45309] hover:underline"
-            >
-              {isCloudSynced ? 'Supabase Connected' : 'Connect Supabase Cloud'}
-            </button> */}
           </div>
-
-          {/* <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span>Vite + React</span>
-            <span>&bull;</span>
-            <span>Ready for Vercel & Netlify</span>
-          </div> */}
         </div>
       </footer>
 
       {/* Modals & Overlays */}
-      <QrModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-        roomId={roomId}
-        onChangeRoom={handleChangeRoom}
-      />
+      <AnimatePresence>
+        {isQrModalOpen && (
+          <QrModal
+            isOpen={isQrModalOpen}
+            onClose={() => setIsQrModalOpen(false)}
+            roomId={roomId}
+            onChangeRoom={handleChangeRoom}
+          />
+        )}
+      </AnimatePresence>
 
-      <SupabaseModal
-        isOpen={isSupabaseModalOpen}
-        onClose={() => setIsSupabaseModalOpen(false)}
-        onConfigUpdated={() => {
-          loadNotes();
-          showToast('Storage configuration updated');
-        }}
-      />
+      <AnimatePresence>
+        {isSupabaseModalOpen && (
+          <SupabaseModal
+            isOpen={isSupabaseModalOpen}
+            onClose={() => setIsSupabaseModalOpen(false)}
+            onConfigUpdated={() => {
+              loadNotes();
+              showToast('Storage configuration updated');
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      <ImageLightbox
-        imageUrl={lightboxImage?.url || null}
-        title={lightboxImage?.title}
-        onClose={() => setLightboxImage(null)}
-      />
+      <AnimatePresence>
+        {lightboxImage && (
+          <ImageLightbox
+            imageUrl={lightboxImage.url}
+            title={lightboxImage.title}
+            onClose={() => setLightboxImage(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Edit / View Note Modal */}
-      <NoteEditModal
-        note={editingNote}
-        isOpen={Boolean(editingNote)}
-        onClose={() => setEditingNote(null)}
-        onSave={handleUpdateNote}
-        onDelete={handleDeleteNote}
-        onOpenImageLightbox={(url, title) => setLightboxImage({ url, title })}
-      />
+      <AnimatePresence>
+        {editingNote && (
+          <NoteEditModal
+            note={editingNote}
+            isOpen={Boolean(editingNote)}
+            onClose={() => setEditingNote(null)}
+            onSave={handleUpdateNote}
+            onDelete={handleDeleteNote}
+            onOpenImageLightbox={(url, title) => setLightboxImage({ url, title })}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Toast Feedback (responsive anchor & safe area) */}
-      {toastMessage && (
-        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 z-50 bg-[#1A1815] text-[#FAF9F7] px-4 py-2.5 rounded-lg text-xs font-medium shadow-elevated flex items-center justify-center sm:justify-start gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="truncate">{toastMessage}</span>
-        </div>
-      )}
+      {/* Toast Feedback with framer-motion micro-animation */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 z-50 bg-[#1A1815] text-[#FAF9F7] px-4 py-2.5 rounded-lg text-xs font-medium shadow-elevated flex items-center justify-center sm:justify-start gap-2 pointer-events-none"
+          >
+            <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

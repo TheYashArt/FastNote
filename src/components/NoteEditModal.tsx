@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Save, 
@@ -79,6 +80,21 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
 
   const [isSaving, setIsSaving] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close attachment dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target as Node)) {
+        setShowAttachMenu(false);
+      }
+    };
+    if (showAttachMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAttachMenu]);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -281,87 +297,99 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
   const totalMdsCount = existingMds.length + newMdFiles.length;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-black/50 backdrop-blur-xs"
       onClick={onClose}
     >
-      <div 
-        className={`w-full max-w-lg sm:max-w-2xl max-h-[88vh] sm:max-h-[85vh] rounded-2xl border ${colorConfig.border} ${colorConfig.bg} shadow-elevated flex flex-col animate-in zoom-in-95 duration-150 overflow-hidden my-auto`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Hidden Multi-File Inputs */}
-        <input
-          type="file"
-          ref={imageInputRef}
-          className="hidden"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            handleAddNewImages(e.target.files);
-            if (e.target) e.target.value = '';
-          }}
-        />
-        <input
-          type="file"
-          ref={pdfInputRef}
-          className="hidden"
-          accept=".pdf,application/pdf"
-          multiple
-          onChange={(e) => {
-            handleAddNewPdfs(e.target.files);
-            if (e.target) e.target.value = '';
-          }}
-        />
-        <input
-          type="file"
-          ref={mdInputRef}
-          className="hidden"
-          accept=".md,text/markdown,text/plain"
-          multiple
-          onChange={(e) => {
-            handleAddNewMds(e.target.files);
-            if (e.target) e.target.value = '';
-          }}
-        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.94, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 14 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 360 }}
+          className={`w-full max-w-lg sm:max-w-2xl max-h-[88vh] sm:max-h-[85vh] rounded-2xl border ${colorConfig.border} ${colorConfig.bg} shadow-elevated flex flex-col overflow-hidden my-auto`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Hidden Multi-File Inputs */}
+          <input
+            type="file"
+            ref={imageInputRef}
+            className="hidden"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              handleAddNewImages(e.target.files);
+              if (e.target) e.target.value = '';
+            }}
+          />
+          <input
+            type="file"
+            ref={pdfInputRef}
+            className="hidden"
+            accept=".pdf,application/pdf"
+            multiple
+            onChange={(e) => {
+              handleAddNewPdfs(e.target.files);
+              if (e.target) e.target.value = '';
+            }}
+          />
+          <input
+            type="file"
+            ref={mdInputRef}
+            className="hidden"
+            accept=".md,text/markdown,text/plain"
+            multiple
+            onChange={(e) => {
+              handleAddNewMds(e.target.files);
+              if (e.target) e.target.value = '';
+            }}
+          />
 
-        {/* Modal Top Chrome */}
-        <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-4 sm:px-6 py-2.5 sm:py-3 bg-white/60 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#1A1815] uppercase tracking-wider font-mono">
-              Edit Sticky Note
-            </span>
-            <span className="text-[11px] font-mono text-[#8C8476]">
-              • {timeAgo(note.created_at)}
-            </span>
+          {/* Modal Top Chrome */}
+          <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-4 sm:px-6 py-2.5 sm:py-3 bg-white/60 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-[#1A1815] uppercase tracking-wider font-mono">
+                Edit Sticky Note
+              </span>
+              <span className="text-[11px] font-mono text-[#8C8476]">
+                • {timeAgo(note.created_at)}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* Pin Toggle */}
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.93 }}
+                onClick={() => setPinned(!pinned)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors ${
+                  pinned
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5'
+                }`}
+                title={pinned ? 'Unpin note' : 'Pin note to top'}
+              >
+                <Pin className={`w-3.5 h-3.5 ${pinned ? 'fill-amber-700 text-amber-700' : ''}`} />
+                <span>{pinned ? 'Pinned' : 'Pin'}</span>
+              </motion.button>
+
+              {/* Close Button */}
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </motion.button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            {/* Pin Toggle */}
-            <button
-              type="button"
-              onClick={() => setPinned(!pinned)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors ${
-                pinned
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5'
-              }`}
-              title={pinned ? 'Unpin note' : 'Pin note to top'}
-            >
-              <Pin className={`w-3.5 h-3.5 ${pinned ? 'fill-amber-700 text-amber-700' : ''}`} />
-              <span>{pinned ? 'Pinned' : 'Pin'}</span>
-            </button>
-
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-black/5 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
-              title="Close (Esc)"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 space-y-4">
@@ -396,98 +424,150 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
 
           {/* Attachments Section */}
           <div className="space-y-3 pt-2 border-t border-[#EBE7E0]/70">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] font-semibold text-[#8C8476] uppercase tracking-wider">
                 Attachments
               </span>
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                {!showLinkInput && !linkUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setShowLinkInput(true)}
-                    className="flex items-center gap-1 text-xs sm:text-[11px] text-[#4D473E] hover:text-[#1A1815] px-2.5 py-1.5 sm:py-0.5 rounded bg-white/60 border border-[#DDD7CD] shrink-0 min-h-[32px] sm:min-h-0"
-                  >
-                    <Link2 className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                    <span>+ Link</span>
-                  </button>
-                )}
-                <button
+              
+              {/* Attachment Plus Menu */}
+              <div className="relative" ref={attachMenuRef}>
+                <motion.button
                   type="button"
-                  disabled={totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
-                  onClick={() => imageInputRef.current?.click()}
-                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
-                    totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE
-                      ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
-                      : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setShowAttachMenu((prev) => !prev)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[30px] sm:min-h-0 ${
+                    showAttachMenu || showLinkInput || linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0
+                      ? 'bg-[#1A1815] text-white shadow-xs'
+                      : 'text-[#4D473E] bg-white/70 hover:bg-[#F4F2EE] border border-[#DDD7CD]'
                   }`}
-                  title={
-                    totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE
-                      ? `Max ${ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE} images reached`
-                      : `Add image (${totalImagesCount}/${ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE})`
-                  }
+                  title="Attach file, link, or media"
                 >
-                  <ImageIcon className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                  <span>+ Image</span>
-                  <span className="text-[10px] font-mono opacity-70">
-                    ({totalImagesCount}/{ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE})
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  disabled={totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
-                  onClick={() => pdfInputRef.current?.click()}
-                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
-                    totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE
-                      ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
-                      : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
-                  }`}
-                  title={
-                    totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE
-                      ? `Max ${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE} PDFs reached`
-                      : `Add PDF (${totalPdfsCount}/${ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE})`
-                  }
-                >
-                  <FileCheck className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                  <span>+ PDF</span>
-                  <span className="text-[10px] font-mono opacity-70">
-                    ({totalPdfsCount}/{ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE})
-                  </span>
-                </button>
+                  <Plus className={`w-3.5 h-3.5 transition-transform duration-150 ${showAttachMenu ? 'rotate-45' : ''}`} />
+                  <span>Attach</span>
+                  {(linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  )}
+                </motion.button>
 
-                <button
-                  type="button"
-                  disabled={totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
-                  onClick={() => mdInputRef.current?.click()}
-                  className={`flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border transition-colors shrink-0 min-h-[32px] sm:min-h-0 ${
-                    totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE
-                      ? 'opacity-50 cursor-not-allowed bg-black/5 text-[#8C8476] border-transparent'
-                      : 'text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD]'
-                  }`}
-                  title={
-                    totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE
-                      ? `Max ${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE} .md files reached`
-                      : `Add Markdown file (${totalMdsCount}/${ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})`
-                  }
-                >
-                  <FileCode className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                  <span>+ .MD</span>
-                  <span className="text-[10px] font-mono opacity-70">
-                    ({totalMdsCount}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE})
-                  </span>
-                </button>
+                {/* Attachment Options Dialogue Box / Dropdown */}
+                <AnimatePresence>
+                  {showAttachMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                      transition={{ duration: 0.14, ease: 'easeOut' }}
+                      className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
+                    >
+                      {/* Link Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowLinkInput(true);
+                          setShowAttachMenu(false);
+                        }}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Link2 className="w-4 h-4 text-[#8C8476]" />
+                          <span>Attach Link</span>
+                        </div>
+                        {linkUrl.trim() && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                      </button>
 
-                {/* Google Drive Backup Link */}
-                <a
-                  href="https://drive.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setShowLinkInput(true)}
-                  className="flex items-center gap-1 text-xs sm:text-[11px] px-2.5 py-1.5 sm:py-0.5 rounded border text-[#4D473E] hover:text-[#1A1815] bg-white/60 border-[#DDD7CD] transition-colors shrink-0 min-h-[32px] sm:min-h-0"
-                  title="Upload larger or multiple files to Google Drive, then paste link"
-                >
-                  <HardDrive className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-amber-700" />
-                  <span>Drive ↗</span>
-                </a>
+                      {/* Images Option */}
+                      <button
+                        type="button"
+                        disabled={totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
+                        onClick={() => {
+                          imageInputRef.current?.click();
+                          setShowAttachMenu(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          totalImagesCount >= ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE
+                            ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                            : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-[#8C8476]" />
+                          <span>Images</span>
+                        </div>
+                        <span className={`text-[10px] font-mono ${totalImagesCount > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                          {totalImagesCount}/{ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE}
+                        </span>
+                      </button>
+
+                      {/* PDFs Option */}
+                      <button
+                        type="button"
+                        disabled={totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
+                        onClick={() => {
+                          pdfInputRef.current?.click();
+                          setShowAttachMenu(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          totalPdfsCount >= ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE
+                            ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                            : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="w-4 h-4 text-[#8C8476]" />
+                          <span>PDF Documents</span>
+                        </div>
+                        <span className={`text-[10px] font-mono ${totalPdfsCount > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                          {totalPdfsCount}/{ATTACHMENT_LIMITS.MAX_PDFS_PER_NOTE}
+                        </span>
+                      </button>
+
+                      {/* Markdown Option */}
+                      <button
+                        type="button"
+                        disabled={totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+                        onClick={() => {
+                          mdInputRef.current?.click();
+                          setShowAttachMenu(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          totalMdsCount >= ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE
+                            ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                            : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileCode className="w-4 h-4 text-[#8C8476]" />
+                          <span>Markdown (.md)</span>
+                        </div>
+                        <span className={`text-[10px] font-mono ${totalMdsCount > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                          {totalMdsCount}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+                        </span>
+                      </button>
+
+                      {/* Divider */}
+                      <div className="h-px bg-[#EBE7E0] my-1" />
+
+                      {/* Google Drive Option */}
+                      <a
+                        href="https://drive.google.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          setShowLinkInput(true);
+                          setShowAttachMenu(false);
+                        }}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="w-4 h-4 text-amber-700" />
+                          <span>Google Drive (Backup)</span>
+                        </div>
+                        <ExternalLink className="w-3 h-3 text-[#8C8476]" />
+                      </a>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -836,14 +916,16 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                 const config = NOTE_COLOR_MAP[cKey];
                 const isSelected = color === cKey;
                 return (
-                  <button
+                  <motion.button
                     key={cKey}
                     type="button"
+                    whileHover={{ scale: 1.22 }}
+                    whileTap={{ scale: 0.88 }}
                     onClick={() => setColor(cKey)}
                     aria-label={config.label}
                     title={config.label}
-                    className={`w-6 h-6 rounded-full border transition-all ${config.border} ${
-                      isSelected ? 'scale-125 ring-2 ring-[#1A1815]/40 shadow-sm' : 'hover:scale-110 opacity-75'
+                    className={`w-6 h-6 rounded-full border transition-shadow ${config.border} ${
+                      isSelected ? 'ring-2 ring-[#1A1815]/40 shadow-sm' : 'opacity-75'
                     }`}
                     style={{ backgroundColor: config.swatch }}
                   />
@@ -857,42 +939,48 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         {/* Modal Action Footer */}
         <div className="border-t border-[#EBE7E0]/80 px-4 sm:px-6 py-3 sm:py-3.5 bg-white/80 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 rounded-b-2xl">
           {/* Delete Action */}
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => {
               if (window.confirm('Are you sure you want to delete this note?')) {
                 onDelete(note.id);
                 onClose();
               }
             }}
-            className="flex items-center gap-1.5 text-xs font-medium text-rose-700 hover:text-rose-900 px-3 py-2 sm:py-1.5 rounded-lg hover:bg-rose-50 transition-colors min-h-[38px] active:scale-95"
+            className="flex items-center gap-1.5 text-xs font-medium text-rose-700 hover:text-rose-900 px-3 py-2 sm:py-1.5 rounded-lg hover:bg-rose-50 transition-colors min-h-[38px]"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete</span>
-          </button>
+          </motion.button>
 
           {/* Cancel and Save */}
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onClose}
-              className="px-3.5 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#8C8476] text-xs font-medium text-[#4D473E] hover:text-[#1A1815] transition-colors min-h-[38px] active:scale-95"
+              className="px-3.5 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#8C8476] text-xs font-medium text-[#4D473E] hover:text-[#1A1815] transition-colors min-h-[38px]"
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isSaving}
               onClick={handleSave}
-              className="flex items-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-[#1A1815] text-white text-xs font-medium hover:bg-[#2F2B26] shadow-paper active:scale-95 disabled:opacity-40 transition-all min-h-[38px]"
+              className="flex items-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-[#1A1815] text-white text-xs font-medium hover:bg-[#2F2B26] shadow-paper disabled:opacity-40 transition-all min-h-[38px]"
             >
               <Save className="w-3.5 h-3.5 text-amber-400" />
               <span>{isSaving ? 'Saving...' : 'Save'}</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

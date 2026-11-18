@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Copy, Check, Smartphone, ArrowRight, RefreshCw, Share2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { generateRoomId } from '../lib/utils';
 
 interface QrModalProps {
@@ -64,19 +65,32 @@ export const QrModal: React.FC<QrModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-150">
-      <div 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16 }}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs"
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.94, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 12 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 360 }}
         className="w-full max-w-sm rounded-2xl bg-white border border-[#DDD7CD] shadow-elevated p-5 sm:p-6 relative overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={onClose}
           className="absolute right-3.5 top-3.5 p-2 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
         >
           <X className="w-4 h-4" />
-        </button>
+        </motion.button>
 
         {/* Header */}
         <div className="text-center mb-4 sm:mb-5">
@@ -113,20 +127,24 @@ export const QrModal: React.FC<QrModalProps> = ({
         {/* Action Buttons: Native Share (on mobile) & Copy Link */}
         <div className="space-y-2 mb-3">
           {hasNativeShare && (
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
               onClick={handleShare}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-[#1A1815] text-[#FAF9F7] text-xs font-medium hover:bg-[#2F2B26] transition-colors min-h-[40px] active:scale-98"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-[#1A1815] text-[#FAF9F7] text-xs font-medium hover:bg-[#2F2B26] transition-colors min-h-[40px]"
             >
               <Share2 className="w-3.5 h-3.5 text-amber-400" />
               <span>Share via Phone / Apps</span>
-            </button>
+            </motion.button>
           )}
 
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleCopy}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-medium transition-colors min-h-[40px] active:scale-98 ${
+            className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-medium transition-colors min-h-[40px] ${
               hasNativeShare 
                 ? 'bg-[#F4F2EE] text-[#1A1815] hover:bg-[#EBE7E0]' 
                 : 'bg-[#1A1815] text-[#FAF9F7] hover:bg-[#2F2B26]'
@@ -134,21 +152,23 @@ export const QrModal: React.FC<QrModalProps> = ({
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Link Copied to Clipboard!' : 'Copy Sync Link'}</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* Switch / Change Room */}
         <div className="pt-3 border-t border-[#EBE7E0] space-y-2">
           <div className="flex items-center justify-between text-[11px] text-[#8C8476]">
             <span>Join another channel</span>
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.93 }}
               onClick={handleGenerateNew}
               className="hover:text-[#1A1815] flex items-center gap-1 text-[11px] py-1"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Random code</span>
-            </button>
+            </motion.button>
           </div>
           <form onSubmit={handleSwitchRoom} className="flex gap-1.5">
             <input
@@ -158,17 +178,19 @@ export const QrModal: React.FC<QrModalProps> = ({
               placeholder="e.g. mobile-notes"
               className="flex-1 px-3 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] text-base sm:text-xs text-[#1A1815] placeholder-[#8C8476] outline-none font-mono min-h-[38px] sm:min-h-0"
             />
-            <button
+            <motion.button
               type="submit"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.93 }}
               disabled={!customRoom.trim()}
               className="px-3.5 py-2 sm:py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#1A1815] text-xs font-medium text-[#1A1815] disabled:opacity-40 transition-colors min-h-[38px] sm:min-h-0 flex items-center justify-center"
             >
               <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            </motion.button>
           </form>
         </div>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

@@ -11,6 +11,7 @@ import {
   Trash2,
   CheckCircle2
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { 
   getStoredSupabaseConfig, 
   saveSupabaseConfig, 
@@ -86,19 +87,32 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      <div 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16 }}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.94, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 12 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 360 }}
         className="w-full max-w-lg rounded-2xl bg-white border border-[#DDD7CD] shadow-elevated p-6 relative overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={onClose}
           className="absolute right-4 top-4 p-1.5 rounded-lg text-[#8C8476] hover:text-[#1A1815] hover:bg-[#F4F2EE] transition-colors"
         >
           <X className="w-4 h-4" />
-        </button>
+        </motion.button>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-4">
@@ -117,8 +131,10 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
 
         {/* Nav Tabs: Credentials vs SQL Setup */}
         <div className="flex items-center gap-2 border-b border-[#EBE7E0] pb-2 mb-4 text-xs font-medium">
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setShowSqlTab(false)}
             className={`px-3 py-1.5 rounded-lg transition-colors ${
               !showSqlTab
@@ -127,9 +143,11 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             }`}
           >
             Connection Credentials
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => setShowSqlTab(true)}
             className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
               showSqlTab
@@ -139,7 +157,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>Database SQL Script</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* Content Body */}
@@ -231,14 +249,16 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 <p className="text-xs text-[#4D473E]">
                   Run this SQL in your Supabase SQL Editor to initialize the database:
                 </p>
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.94 }}
                   onClick={handleCopySql}
                   className="flex items-center gap-1 text-xs font-medium text-[#B45309] hover:text-[#92400E] px-2 py-1 rounded bg-amber-50 border border-amber-200"
                 >
                   {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedSql ? 'Copied SQL' : 'Copy Script'}</span>
-                </button>
+                </motion.button>
               </div>
 
               <pre className="p-3 bg-[#1A1815] text-[#FAF9F7] font-mono text-[11px] rounded-xl overflow-x-auto max-h-60 leading-relaxed">
@@ -252,39 +272,45 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
         <div className="mt-4 pt-3 border-t border-[#EBE7E0] flex items-center justify-between gap-2">
           <div>
             {currentConfig.isConfigured && (
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleClear}
                 className="flex items-center gap-1.5 text-xs text-rose-700 hover:text-rose-900 px-2 py-1.5 rounded hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Disconnect</span>
-              </button>
+              </motion.button>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isTesting || !url.trim()}
               onClick={handleTest}
               className="px-3 py-1.5 rounded-lg border border-[#DDD7CD] hover:border-[#1A1815] text-xs font-medium text-[#1A1815] disabled:opacity-40 transition-colors"
             >
               {isTesting ? 'Testing...' : 'Test Connection'}
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleSave}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#1A1815] text-white text-xs font-medium hover:bg-[#2F2B26] transition-colors shadow-paper active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#1A1815] text-white text-xs font-medium hover:bg-[#2F2B26] transition-colors shadow-paper"
             >
               <Save className="w-3.5 h-3.5 text-amber-400" />
               <span>Save Credentials</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

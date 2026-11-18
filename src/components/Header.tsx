@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   QrCode,
   Database,
@@ -51,13 +52,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-[#FAF9F7]/95 backdrop-blur-md border-b border-[#EBE7E0] transition-all">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+      <div className="w-full px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
 
         {/* Brand */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1A1815] text-[#FAF9F7] flex items-center justify-center font-mono font-semibold text-xs sm:text-sm shadow-xs">
+          <motion.div 
+            whileHover={{ scale: 1.08, rotate: 3 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1A1815] text-[#FAF9F7] flex items-center justify-center font-mono font-semibold text-xs sm:text-sm shadow-xs cursor-pointer select-none"
+          >
             FN
-          </div>
+          </motion.div>
           <div>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <span className="font-semibold text-sm sm:text-base tracking-tight text-[#1A1815]">FastNote</span>
@@ -99,32 +104,36 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div className="w-px h-3.5 bg-[#EBE7E0] mx-1 sm:mx-2 shrink-0" />
 
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.85 }}
             onClick={handleCopyShareLink}
             title="Copy room link"
-            className="text-[#8C8476] hover:text-[#1A1815] transition-colors p-1 sm:p-0.5 rounded shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center active:scale-90"
+            className="text-[#8C8476] hover:text-[#1A1815] transition-colors p-1 sm:p-0.5 rounded shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
+          </motion.button>
         </div>
         {/* Center / Actions: Channel Pill & Quick Pairing */}
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          {/* Channel Pill */}
-
           {/* QR Code Quick Pairing */}
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.93 }}
             onClick={onOpenQrModal}
             className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-white border-[#DDD7CD] text-[#4D473E] hover:border-[#B8B0A2] transition-colors shrink-0 min-h-[32px]"
             title="Scan QR Code to open on mobile"
           >
             <QrCode className="w-3.5 h-3.5 text-[#8C8476]" />
-          </button>
+          </motion.button>
 
           {/* Supabase Cloud Status Indicator */}
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.93 }}
             onClick={onOpenSupabaseModal}
             className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors shrink-0 min-h-[32px] ${isCloudSynced
               ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800 hover:bg-emerald-100/60'
@@ -137,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCloudSynced ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                 }`}
             />
-          </button>
+          </motion.button>
 
           {/* Current Device Pill */}
           <div

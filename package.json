@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
     "autoprefixer": "^10.6.2",
+    "framer-motion": "^14.14.0",
     "lucide-react": "^1.74.0",
     "postcss": "^8.5.33",
     "qrcode.react": "^4.2.0",
