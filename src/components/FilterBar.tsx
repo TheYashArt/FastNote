@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Pin, Image as ImageIcon, FileCheck, Layers, FileCode } from 'lucide-react';
+import { Search, X, Pin, Image as ImageIcon, FileCheck, Layers, FileCode, CodeXml } from 'lucide-react';
 import { CustomCalendarFilter } from './CustomCalendarFilter';
 
-export type FilterOption = 'all' | 'image' | 'pdf' | 'md' | 'pinned';
+export type FilterOption = 'all' | 'image' | 'pdf' | 'md' | 'html' | 'pinned';
 
 interface FilterBarProps {
   currentFilter: FilterOption;
@@ -18,6 +18,7 @@ interface FilterBarProps {
     image: number;
     pdf: number;
     md: number;
+    html: number;
     pinned: number;
   };
 }
@@ -123,6 +124,29 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               currentFilter === 'md' ? 'bg-[#2F2B26] text-amber-300' : 'bg-[#F4F2EE] text-[#8C8476]'
             }`}>
               {counts.md}
+            </span>
+          )}
+        </motion.button>
+
+        {/* HTML */}
+        <motion.button
+          type="button"
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => onFilterChange('html')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 min-h-[34px] sm:min-h-0 ${
+            currentFilter === 'html'
+              ? 'bg-[#1A1815] text-[#FAF9F7] shadow-sm'
+              : 'bg-white border border-[#DDD7CD] text-[#4D473E] hover:text-[#1A1815] hover:border-[#B8B0A2] active:bg-[#F4F2EE]'
+          }`}
+        >
+          <CodeXml className="w-3.5 h-3.5 text-orange-600" />
+          <span>HTML</span>
+          {counts.html > 0 && (
+            <span className={`text-[10px] font-mono px-1 rounded ${
+              currentFilter === 'html' ? 'bg-[#2F2B26] text-amber-300' : 'bg-[#F4F2EE] text-[#8C8476]'
+            }`}>
+              {counts.html}
             </span>
           )}
         </motion.button>

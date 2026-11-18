@@ -144,6 +144,8 @@ export function App() {
       pdf_attachments?: NoteAttachmentFile[];
       md_files?: File[];
       md_attachments?: NoteAttachmentFile[];
+      html_files?: File[];
+      html_attachments?: NoteAttachmentFile[];
     }
   ) => {
     try {
@@ -212,6 +214,10 @@ export function App() {
         (n.attachments?.md_files && n.attachments.md_files.length > 0) ||
         n.attachments?.md_file
       )).length,
+      html: notes.filter((n) => Boolean(
+        (n.attachments?.html_files && n.attachments.html_files.length > 0) ||
+        n.attachments?.html_file
+      )).length,
       pinned: notes.filter((n) => n.pinned).length,
     };
   }, [notes]);
@@ -243,6 +249,12 @@ export function App() {
             note.attachments?.md_file
           );
           if (!hasMd) return false;
+        } else if (filter === 'html') {
+          const hasHtml = Boolean(
+            (note.attachments?.html_files && note.attachments.html_files.length > 0) ||
+            note.attachments?.html_file
+          );
+          if (!hasHtml) return false;
         }
 
         // Date filter
@@ -265,8 +277,9 @@ export function App() {
           const matchImages = note.attachments?.images?.some((i) => i.name.toLowerCase().includes(q));
           const matchPdfs = note.attachments?.pdfs?.some((p) => p.name.toLowerCase().includes(q));
           const matchMds = note.attachments?.md_files?.some((m) => m.name.toLowerCase().includes(q));
+          const matchHtmls = note.attachments?.html_files?.some((h) => h.name.toLowerCase().includes(q));
           const matchFileName = note.file_name?.toLowerCase().includes(q);
-          if (!matchTitle && !matchContent && !matchLink && !matchImages && !matchPdfs && !matchMds && !matchFileName) return false;
+          if (!matchTitle && !matchContent && !matchLink && !matchImages && !matchPdfs && !matchMds && !matchHtmls && !matchFileName) return false;
         }
 
         return true;

@@ -14,7 +14,8 @@ import {
   Maximize2,
   Plus,
   HardDrive,
-  FileCode
+  FileCode,
+  CodeXml
 } from 'lucide-react';
 import type { Note, NoteColor, NoteAttachmentFile } from '../types';
 import { extractDomain, formatBytes, timeAgo, NOTE_COLOR_MAP, isUrl, ATTACHMENT_LIMITS } from '../lib/utils';
@@ -37,6 +38,8 @@ interface NoteEditModalProps {
       pdf_attachments?: NoteAttachmentFile[];
       md_files?: File[];
       md_attachments?: NoteAttachmentFile[];
+      html_files?: File[];
+      html_attachments?: NoteAttachmentFile[];
     }
   ) => Promise<void>;
   onDelete: (noteId: string) => void;
@@ -78,6 +81,10 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
   const [existingMds, setExistingMds] = useState<NoteAttachmentFile[]>([]);
   const [newMdFiles, setNewMdFiles] = useState<File[]>([]);
 
+  // Existing & New HTMLs
+  const [existingHtmls, setExistingHtmls] = useState<NoteAttachmentFile[]>([]);
+  const [newHtmlFiles, setNewHtmlFiles] = useState<File[]>([]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
@@ -99,6 +106,8 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const mdInputRef = useRef<HTMLInputElement>(null);
+  const htmlInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync state whenever note changes
   useEffect(() => {
@@ -139,6 +148,14 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         : [];
       setExistingMds(mds);
       setNewMdFiles([]);
+
+      const htmls = note.attachments?.html_files && note.attachments.html_files.length > 0
+        ? note.attachments.html_files
+        : note.attachments?.html_file
+        ? [note.attachments.html_file]
+        : [];
+      setExistingHtmls(htmls);
+      setNewHtmlFiles([]);
     }
   }, [note, isOpen]);
 
@@ -153,6 +170,16 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
     };
   }, [newImages]);
 
+  // Auto-adjust textarea height as user types or when modal opens, capped at 280px
+  useEffect(() => {
+    if (!isOpen) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const nextHeight = Math.min(Math.max(textarea.scrollHeight, 84), 280);
+    textarea.style.height = `${nextHeight}px`;
+  }, [content, isOpen]);
+
   // Escape key to cancel, Ctrl+Enter to save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -166,7 +193,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, title, content, color, pinned, linkUrl, existingImages, newImages, existingPdfs, newPdfFiles, existingMds, newMdFiles]);
+  }, [isOpen, title, content, color, pinned, linkUrl, existingImages, newImages, existingPdfs, newPdfFiles, existingMds, newMdFiles, existingHtmls, newHtmlFiles]);
 
   if (!isOpen || !note) return null;
 
@@ -254,6 +281,30 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
     setNewMdFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleAddNewHtmls = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const currentTotal = existingHtmls.length + newHtmlFiles.length;
+    const remainingSlots = ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE - currentTotal;
+    if (remainingSlots <= 0) return;
+
+    const htmls: File[] = [];
+    for (let i = 0; i < files.length && htmls.length < remainingSlots; i++) {
+      const file = files[i];
+      if (file.size <= ATTACHMENT_LIMITS.MAX_FILE_SIZE_BYTES && (file.name.endsWith('.html') || file.name.endsWith('.htm') || file.type === 'text/html')) {
+        htmls.push(file);
+      }
+    }
+    setNewHtmlFiles((prev) => [...prev, ...htmls]);
+  };
+
+  const handleRemoveExistingHtml = (index: number) => {
+    setExistingHtmls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewHtml = (index: number) => {
+    setNewHtmlFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleCopyLink = () => {
     if (!linkUrl) return;
     navigator.clipboard.writeText(linkUrl);
@@ -283,6 +334,8 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
         pdf_attachments: existingPdfs,
         md_files: newMdFiles,
         md_attachments: existingMds,
+        html_files: newHtmlFiles,
+        html_attachments: existingHtmls,
       });
       onClose();
     } catch (err) {
@@ -295,6 +348,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
   const totalImagesCount = existingImages.length + newImages.length;
   const totalPdfsCount = existingPdfs.length + newPdfFiles.length;
   const totalMdsCount = existingMds.length + newMdFiles.length;
+  const totalHtmlsCount = existingHtmls.length + newHtmlFiles.length;
 
   return (
     <motion.div 
@@ -344,6 +398,17 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
             multiple
             onChange={(e) => {
               handleAddNewMds(e.target.files);
+              if (e.target) e.target.value = '';
+            }}
+          />
+          <input
+            type="file"
+            ref={htmlInputRef}
+            className="hidden"
+            accept=".html,.htm,text/html"
+            multiple
+            onChange={(e) => {
+              handleAddNewHtmls(e.target.files);
               if (e.target) e.target.value = '';
             }}
           />
@@ -408,17 +473,17 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
             />
           </div>
 
-          {/* Note Body Textarea (text-base prevents iOS auto-zoom) */}
+          {/* Note Body Textarea (text-base prevents iOS auto-zoom, auto-resizing with cap) */}
           <div>
             <label className="block text-[11px] font-semibold text-[#8C8476] uppercase tracking-wider mb-1">
               Note Content
             </label>
             <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={3}
               placeholder="Write your note, instructions, or clipboard text here..."
-              className="w-full bg-white/70 border border-[#DDD7CD] rounded-lg p-3 text-base sm:text-sm text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] resize-y leading-relaxed font-normal"
+              className="w-full bg-white/70 border border-[#DDD7CD] rounded-lg p-3 text-base sm:text-sm text-[#1A1815] placeholder-[#8C8476] outline-none focus:border-[#8C8476] resize-none leading-relaxed font-normal overflow-y-auto min-h-[84px] max-h-[280px]"
             />
           </div>
 
@@ -437,7 +502,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                   whileTap={{ scale: 0.94 }}
                   onClick={() => setShowAttachMenu((prev) => !prev)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors shrink-0 min-h-[30px] sm:min-h-0 ${
-                    showAttachMenu || showLinkInput || linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0
+                    showAttachMenu || showLinkInput || linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0 || totalHtmlsCount > 0
                       ? 'bg-[#1A1815] text-white shadow-xs'
                       : 'text-[#4D473E] bg-white/70 hover:bg-[#F4F2EE] border border-[#DDD7CD]'
                   }`}
@@ -445,7 +510,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                 >
                   <Plus className={`w-3.5 h-3.5 transition-transform duration-150 ${showAttachMenu ? 'rotate-45' : ''}`} />
                   <span>Attach</span>
-                  {(linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0) && (
+                  {(linkUrl || totalImagesCount > 0 || totalPdfsCount > 0 || totalMdsCount > 0 || totalHtmlsCount > 0) && (
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                   )}
                 </motion.button>
@@ -542,6 +607,29 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                         </div>
                         <span className={`text-[10px] font-mono ${totalMdsCount > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
                           {totalMdsCount}/{ATTACHMENT_LIMITS.MAX_MDS_PER_NOTE}
+                        </span>
+                      </button>
+
+                      {/* HTML Option */}
+                      <button
+                        type="button"
+                        disabled={totalHtmlsCount >= ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE}
+                        onClick={() => {
+                          htmlInputRef.current?.click();
+                          setShowAttachMenu(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          totalHtmlsCount >= ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE
+                            ? 'text-[#8C8476] opacity-50 cursor-not-allowed'
+                            : 'text-[#1A1815] hover:bg-[#F4F2EE]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <CodeXml className="w-4 h-4 text-orange-600" />
+                          <span>HTML Webpage (.html)</span>
+                        </div>
+                        <span className={`text-[10px] font-mono ${totalHtmlsCount > 0 ? 'text-amber-600 font-bold' : 'text-[#8C8476]'}`}>
+                          {totalHtmlsCount}/{ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE}
                         </span>
                       </button>
 
@@ -895,6 +983,90 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                         onClick={() => handleRemoveNewMd(idx)}
                         className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
                         title="Remove Markdown"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Multiple Attached HTML Files (Existing + New) */}
+            {totalHtmlsCount > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-[#8C8476] font-medium px-0.5">
+                  <span>HTML Webpages ({totalHtmlsCount}/{ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE})</span>
+                  {totalHtmlsCount < ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE && (
+                    <button
+                      type="button"
+                      onClick={() => htmlInputRef.current?.click()}
+                      className="text-[#B45309] hover:underline flex items-center gap-0.5 text-[11px]"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add more</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Existing HTMLs */}
+                  {existingHtmls.map((html, idx) => (
+                    <div 
+                      key={`exist_html_${html.name}_${idx}`}
+                      className="p-2 rounded-lg bg-white/80 border border-[#DDD7CD] flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <div className="w-7 h-7 rounded bg-orange-50 border border-orange-200/60 flex items-center justify-center text-orange-600 shrink-0">
+                          <CodeXml className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-semibold text-[#1A1815] truncate font-mono">{html.name}</p>
+                          <p className="text-[10px] font-mono text-[#8C8476]">{formatBytes(html.size)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <a
+                          href={html.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-[#8C8476] hover:text-[#1A1815] rounded hover:bg-[#F4F2EE]"
+                          title="Open HTML file"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingHtml(idx)}
+                          className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
+                          title="Remove HTML file"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* New HTMLs */}
+                  {newHtmlFiles.map((file, idx) => (
+                    <div 
+                      key={`new_html_${file.name}_${idx}`}
+                      className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/60 flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <div className="w-7 h-7 rounded bg-orange-50 border border-orange-200/60 flex items-center justify-center text-orange-600 shrink-0">
+                          <CodeXml className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-semibold text-[#1A1815] truncate font-mono">{file.name}</p>
+                          <p className="text-[10px] font-mono text-amber-800">New • {formatBytes(file.size)}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewHtml(idx)}
+                        className="p-1 text-[#8C8476] hover:text-rose-700 rounded hover:bg-rose-50"
+                        title="Remove HTML file"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

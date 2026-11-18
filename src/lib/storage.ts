@@ -15,12 +15,13 @@ if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
   }
 }
 
-// Normalize a note and extract structured attachments (supporting multiple images, multiple PDFs, and Markdown files)
+// Normalize a note and extract structured attachments (supporting multiple images, multiple PDFs, Markdown, and HTML files)
 export function normalizeNote(raw: Note): Note {
   let attachments: NoteAttachments = {
     images: [],
     pdfs: [],
     md_files: [],
+    html_files: [],
   };
 
   if (raw.file_url) {
@@ -46,9 +47,16 @@ export function normalizeNote(raw: Note): Note {
             : parsed.md_file
             ? [parsed.md_file]
             : [],
+          html_files: Array.isArray(parsed.html_files)
+            ? parsed.html_files
+            : Array.isArray(parsed.htmls)
+            ? parsed.htmls
+            : parsed.html_file
+            ? [parsed.html_file]
+            : [],
         };
       } catch {
-        attachments = { images: [], pdfs: [], md_files: [] };
+        attachments = { images: [], pdfs: [], md_files: [], html_files: [] };
       }
     } else {
       // Legacy single file_url
@@ -76,11 +84,13 @@ export function normalizeNote(raw: Note): Note {
   if (!attachments.images) attachments.images = [];
   if (!attachments.pdfs) attachments.pdfs = [];
   if (!attachments.md_files) attachments.md_files = [];
+  if (!attachments.html_files) attachments.html_files = [];
 
   // Maintain backward compatibility for single-item readers
   attachments.image = attachments.images[0];
   attachments.pdf = attachments.pdfs[0];
   attachments.md_file = attachments.md_files[0];
+  attachments.html_file = attachments.html_files[0];
 
   return {
     ...raw,
@@ -251,6 +261,7 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
   const imageAttachments: NoteAttachmentFile[] = [...(payload.image_attachments || [])];
   const pdfAttachments: NoteAttachmentFile[] = [...(payload.pdf_attachments || [])];
   const mdAttachments: NoteAttachmentFile[] = [...(payload.md_attachments || [])];
+  const htmlAttachments: NoteAttachmentFile[] = [...(payload.html_attachments || [])];
 
   // Upload multiple images if provided (enforcing MAX_IMAGES_PER_NOTE)
   const remainingImageSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE - imageAttachments.length);
@@ -300,14 +311,27 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
     }
   }
 
+  // Upload multiple HTML files if provided (enforcing MAX_HTMLS_PER_NOTE)
+  const remainingHtmlSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE - htmlAttachments.length);
+  if (payload.html_files && payload.html_files.length > 0) {
+    const filesToUpload = payload.html_files.slice(0, remainingHtmlSlots);
+    for (const f of filesToUpload) {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, f, 'html');
+      htmlAttachments.push(uploaded);
+    }
+  }
+
   // Legacy fallback
-  if (payload.file && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0) {
+  if (payload.file && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && htmlAttachments.length === 0) {
     if (payload.file.type.startsWith('image/')) {
       const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'img');
       imageAttachments.push(uploaded);
     } else if (payload.file.name.endsWith('.md') || payload.file.type === 'text/markdown') {
       const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'md');
       mdAttachments.push(uploaded);
+    } else if (payload.file.name.endsWith('.html') || payload.file.name.endsWith('.htm') || payload.file.type === 'text/html') {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'html');
+      htmlAttachments.push(uploaded);
     } else {
       const uploaded = await uploadOrConvertFile(supabase, roomId, payload.file, 'doc');
       pdfAttachments.push(uploaded);
@@ -319,12 +343,14 @@ export async function createNote(roomId: string, payload: NewNotePayload): Promi
     images: imageAttachments,
     pdfs: pdfAttachments,
     md_files: mdAttachments,
+    html_files: htmlAttachments,
     image: imageAttachments[0],
     pdf: pdfAttachments[0],
     md_file: mdAttachments[0],
+    html_file: htmlAttachments[0],
   };
 
-  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0);
+  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0 || htmlAttachments.length > 0);
 
   // Primary type for DB check constraint (must be 'text' | 'link' | 'image' | 'pdf')
   let primaryType: NoteType = 'text';
@@ -412,6 +438,7 @@ export async function updateNote(
   const imageAttachments: NoteAttachmentFile[] = [...(payload.image_attachments || [])];
   const pdfAttachments: NoteAttachmentFile[] = [...(payload.pdf_attachments || [])];
   const mdAttachments: NoteAttachmentFile[] = [...(payload.md_attachments || [])];
+  const htmlAttachments: NoteAttachmentFile[] = [...(payload.html_attachments || [])];
 
   // Upload any new image files (enforcing MAX_IMAGES_PER_NOTE)
   const remainingImageSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_IMAGES_PER_NOTE - imageAttachments.length);
@@ -449,17 +476,29 @@ export async function updateNote(
     }
   }
 
+  // Upload any new HTML files (enforcing MAX_HTMLS_PER_NOTE)
+  const remainingHtmlSlots = Math.max(0, ATTACHMENT_LIMITS.MAX_HTMLS_PER_NOTE - htmlAttachments.length);
+  if (payload.html_files && payload.html_files.length > 0) {
+    const filesToUpload = payload.html_files.slice(0, remainingHtmlSlots);
+    for (const f of filesToUpload) {
+      const uploaded = await uploadOrConvertFile(supabase, roomId, f, 'html');
+      htmlAttachments.push(uploaded);
+    }
+  }
+
   const attachments: NoteAttachments = {
     link,
     images: imageAttachments,
     pdfs: pdfAttachments,
     md_files: mdAttachments,
+    html_files: htmlAttachments,
     image: imageAttachments[0],
     pdf: pdfAttachments[0],
     md_file: mdAttachments[0],
+    html_file: htmlAttachments[0],
   };
 
-  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0);
+  const hasAttachments = Boolean(link || imageAttachments.length > 0 || pdfAttachments.length > 0 || mdAttachments.length > 0 || htmlAttachments.length > 0);
 
   let primaryType: NoteType = 'text';
   if (link && imageAttachments.length === 0 && pdfAttachments.length === 0 && mdAttachments.length === 0 && !payload.content.trim()) {
@@ -555,6 +594,12 @@ export async function deleteNote(roomId: string, noteId: string): Promise<void> 
         noteToDelete.attachments.md_files?.forEach((md) => {
           if (md.url.includes('/fastnote-files/')) {
             const path = md.url.split('/fastnote-files/')[1];
+            if (path) filePaths.push(decodeURIComponent(path));
+          }
+        });
+        noteToDelete.attachments.html_files?.forEach((html) => {
+          if (html.url.includes('/fastnote-files/')) {
+            const path = html.url.split('/fastnote-files/')[1];
             if (path) filePaths.push(decodeURIComponent(path));
           }
         });

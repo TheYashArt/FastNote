@@ -1,5 +1,5 @@
 import React from 'react';
-import { StickyNote, Image as ImageIcon, FileCheck, Layers, Calendar } from 'lucide-react';
+import { StickyNote, Image as ImageIcon, FileCheck, Layers, Calendar, FileCode, CodeXml } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { FilterOption } from './FilterBar';
 
@@ -80,6 +80,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           icon: <FileCheck className="w-6 h-6 text-[#8C8476]" />,
           title: 'No PDF documents found',
           desc: 'Upload a PDF ticket, paper, or invoice to easily open and view it on your mobile device.',
+        };
+      case 'md':
+        return {
+          icon: <FileCode className="w-6 h-6 text-indigo-600" />,
+          title: 'No Markdown files found',
+          desc: 'Attach .md documentation or cheat sheets to read across your paired devices.',
+        };
+      case 'html':
+        return {
+          icon: <CodeXml className="w-6 h-6 text-orange-600" />,
+          title: 'No HTML files found',
+          desc: 'Attach HTML files or webpage templates to access and view them on any paired device.',
         };
       case 'pinned':
         return {

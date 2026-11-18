@@ -13,10 +13,12 @@ export interface NoteAttachments {
   images?: NoteAttachmentFile[];
   pdfs?: NoteAttachmentFile[];
   md_files?: NoteAttachmentFile[];
+  html_files?: NoteAttachmentFile[];
   // Legacy backward compatibility
   image?: NoteAttachmentFile;
   pdf?: NoteAttachmentFile;
   md_file?: NoteAttachmentFile;
+  html_file?: NoteAttachmentFile;
 }
 
 export interface Note {
@@ -57,6 +59,8 @@ export interface NewNotePayload {
   pdf_attachments?: NoteAttachmentFile[];
   md_files?: File[];
   md_attachments?: NoteAttachmentFile[];
+  html_files?: File[];
+  html_attachments?: NoteAttachmentFile[];
   // Legacy fallback
   image_file?: File | null;
   image_url?: string;
@@ -84,6 +88,8 @@ export interface UpdateNotePayload {
   pdf_attachments?: NoteAttachmentFile[];
   md_files?: File[];
   md_attachments?: NoteAttachmentFile[];
+  html_files?: File[];
+  html_attachments?: NoteAttachmentFile[];
   // Legacy single file fallback
   image_file?: File | null;
   image_attachment?: NoteAttachmentFile | null;
