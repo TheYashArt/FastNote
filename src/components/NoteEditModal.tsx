@@ -495,7 +495,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
               </span>
               
               {/* Attachment Plus Menu */}
-              <div className="relative" ref={attachMenuRef}>
+              <div className="relative z-30" ref={attachMenuRef}>
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.03 }}
@@ -523,7 +523,7 @@ export const NoteEditModal: React.FC<NoteEditModalProps> = ({
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.94, y: -6 }}
                       transition={{ duration: 0.14, ease: 'easeOut' }}
-                      className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
+                      className="absolute right-0 top-full mt-1.5 z-50 w-60 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
                     >
                       {/* Link Option */}
                       <button

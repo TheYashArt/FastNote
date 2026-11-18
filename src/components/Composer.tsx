@@ -460,15 +460,15 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`rounded-xl border transition-all duration-200 shadow-paper relative overflow-hidden ${currentColorConfig.bg
+      className={`rounded-xl border transition-all duration-200 shadow-paper relative overflow-visible ${currentColorConfig.bg
         } ${currentColorConfig.border} ${isDragging ? 'ring-2 ring-amber-500 border-amber-500 scale-[1.005]' : ''
         }`}
     >
       {/* Top Composer Header: Quick actions & Pin toggle */}
-      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2 bg-white/50 gap-2 relative">
+      <div className="flex items-center justify-between border-b border-[#EBE7E0]/80 px-3 sm:px-4 py-2 bg-white/50 gap-2 relative z-30 rounded-t-xl">
 
         {/* Attachment Adders Menu via Plus Button */}
-        <div className="relative" ref={attachMenuRef}>
+        <div className="relative z-40" ref={attachMenuRef}>
           <motion.button
             type="button"
             whileHover={{ scale: 1.03 }}
@@ -496,7 +496,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: -6 }}
                 transition={{ duration: 0.14, ease: 'easeOut' }}
-                className="absolute left-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
+                className="absolute left-0 top-full mt-1.5 z-50 w-60 bg-white border border-[#DDD7CD] rounded-xl shadow-elevated p-1.5 space-y-1 select-none"
               >
                 {/* Link Option */}
                 <button
@@ -1063,7 +1063,7 @@ export const Composer: React.FC<ComposerProps> = ({ onAddNote, isSubmitting }) =
       </div>
 
       {/* Bottom Action Footer: Stationery Color Swatches & Submit */}
-      <div className="flex items-center justify-between border-t border-[#EBE7E0]/80 px-3 sm:px-4 py-2.5 bg-white/40 gap-3">
+      <div className="flex items-center justify-between border-t border-[#EBE7E0]/80 px-3 sm:px-4 py-2.5 bg-white/40 gap-3 rounded-b-xl">
 
         {/* Subtle Stationery Color Swatches (larger touch targets on mobile) */}
         <div className="flex items-center gap-2 sm:gap-1.5" title="Note paper color">
